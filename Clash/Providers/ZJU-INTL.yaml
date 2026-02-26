@@ -15,5 +15,3 @@ payload:
   - DOMAIN-SUFFIX,us.prairielearn.com
   # zoom
   - DOMAIN-SUFFIX,zoom.us
-  # researchgate
-  - DOMAIN-SUFFIX,researchgate.net
