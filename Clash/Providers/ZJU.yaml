@@ -105,5 +105,3 @@ payload:
   - DOMAIN-SUFFIX,nejm.org
   - DOMAIN-SUFFIX,icevirtuallibrary.com
   - DOMAIN-SUFFIX,cdnsciencepub.com
-  # researchgate
-  - DOMAIN-SUFFIX,researchgate.net
