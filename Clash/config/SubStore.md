@@ -2,43 +2,37 @@
 
 ## 配置
 
-1. 在 Sub-Store 创建组合订阅 `Plinx`。
-2. 默认分类：`Plinx-home` 是中转订阅；`Plinx-high` 是高速订阅。
-3. 独立家宽落地订阅可命名为 `Plinx-residential` 并加入组合；如名称不同，修改脚本顶部 `sourceCategory`。不要把名称包含“家宽”的中转入口当作独立家宽落地。
-4. 新建普通“文件”（不要选择“mihomo 配置”），名称 `ZJU-Plinx`，来源选择“远程”，链接：
+1. 创建组合订阅 `Plinx`，包含 `Plinx-home`（中转）和 `Plinx-high`（高速）。如订阅名称不同，修改脚本顶部 `collectionName` 和 `sourceCategory`。
+2. 新建普通“文件”（不是“mihomo 配置”），名称 `ZJU-Plinx`，来源“远程”：
 
    ```text
    https://raw.githubusercontent.com/Ruirui-Zhong/ZJU-Rule/main/Clash/config/ZJU.ini
    ```
 
-5. 添加脚本操作，直接粘贴同目录 `zju-sub-store.js` 的全部内容；或使用远程脚本链接：
+3. 添加脚本操作，粘贴同目录 `zju-sub-store.js` 的全部内容，或使用远程脚本：
 
    ```text
    https://raw.githubusercontent.com/Ruirui-Zhong/ZJU-Rule/main/Clash/config/zju-sub-store.js
    ```
 
-6. 即时预览，确认有 `proxies`、`proxy-groups`、`rule-providers`、`rules`，保存后复制完整配置链接给 Mihomo 客户端。
+4. 即时预览并保存，将完整配置下载链接导入客户端。升级旧版本时，需要同时更新 INI 和脚本，可禁用远程缓存后预览。
 
-测试 PR 分支时，INI 和远程脚本 URL 的 `main` 替换为实际分支。完整测试还需将脚本顶部 `ownRoot` 的分支一并替换，否则规则集仍取自 `main`。
+## 手动选择
 
-## 行为
+- `🚀 节点` 只有两个选项：`🛰️ 中转节点`、`⚡ 高速节点`。进入对应组直接选择实际节点，不设置自动、故障转移、负载均衡或地区子组。
+- `🤖 AI 平台` 默认跟随 `🚀 节点`，也可以直接选择独立节点，供 AI 平台使用，不改变一般代理流量的节点选择。
+- AI 域名统一维护在 `Clash/AIPlatforms.list`，当前包含原规则中的 ChatGPT/OpenAI、Claude、Gemini、Poe 等平台。不将通用登录、支付或监控域名整体归入 AI。
+- 学术和一般代理流量使用 `🚀 节点`，原先默认直连的规则使用 `DIRECT`，广告拦截使用 `REJECT`。保留校园规则的匹配顺序，移除应用策略组及其切换选项。
+- `ℹ️ 订阅信息` 单独显示带来源标签的流量、重置及到期条目，不参与分流和测速；两个套餐不合并计算，更新配置后刷新。客户端顶部流量统计由响应头决定，脚本不改写响应头。
+- 当前家宽专用中转节点仍归中转，不单独生成家宽组。普通 INI 供 subconverter 使用时按名称匹配；Sub-Store 脚本按订阅来源分类。
+- `proxies` 是必需的节点清单，`proxy-groups` 才是客户端选择分组；同名节点追加编号，内部来源字段不输出。
 
-- `proxies` 是配置必需的节点清单，`proxy-groups` 决定分类展示。
-- 主选择组只显示实际存在的线路分类。每类具有自动、故障转移、手动或地区子组。没有节点的家宽和地区组不生成，不用 `DIRECT` 占位。
-- 高速地区按节点名称识别；`GM` 暂按当前命名约定归德国，可在脚本 `regions` 修改；没有地区信息的中转节点不推断落地国家。
-- 流量、到期、重置等公告条目保留在独立的“ℹ️ 订阅信息”组，名称标注来源订阅，不参与线路选择或测速；该组默认选中 `DIRECT`，不被分流规则引用。应用分流组只引用分类，不重复展开全部节点。
-- 两个套餐的信息分别展示，不合并计算剩余流量或到期时间；仅显示订阅原本提供的信息条目，更新配置后刷新。客户端顶部的流量统计由订阅响应头决定，本脚本不改写响应头。
-- 保留 ZJU、学术、应用规则的既有顺序。`ResearchDirect.list` 位于最前，ResearchGate 及其子域名明确走 `DIRECT`。
-- 家宽组不存在时，旧的家宽组引用改为主选择组；这不代表中转节点是家宽落地。
-- 同名节点追加编号；Sub-Store 的内部来源信息只用于分类，不输出到客户端。
-- INI 在重新生成配置时读取，受 Sub-Store 缓存影响；规则集由 Mihomo 每 86400 秒更新。修改后可禁用远程缓存重新预览，并在客户端更新规则集。
+## 直连与更新
 
-## 维护与限制
-
-- 新增明确需要直连的网站时，编辑 `Clash/ResearchDirect.list`，再运行 `python3 update_providers.py` 同步 Provider。`DOMAIN-SUFFIX,researchgate.net` 覆盖主站和子域名。
-- 直连规则只决定路由，不保证目标网站在当前网络中可以访问。
-- 脚本仅适配当前 INI 的分组、规则集、`[]GEOIP` 和 `[]FINAL`，不执行全部 subconverter 选项，也不加载注释掉的 `clash_rule_base`。
-- 原 INI 供 subconverter 使用，其分类依赖节点名称。脚本供 Sub-Store 使用，其分类依赖订阅来源；两者不要混淆。原 INI 的空地区组行为取决于 subconverter，动态隐藏空组由本脚本实现。
-- 输出采用最小网络配置。现有端口、DNS、TUN、控制接口和密钥应通过 Clash for Linux 的 Mixin 管理，导入前检查运行配置。
-- Sub-Store 和客户端分别需要能获取 GitHub 文件及远程规则集。
-- 不要将订阅地址、节点凭据或控制接口密钥提交到仓库。
+- 第一条内联规则 `IP-CIDR,100.101.106.44/32,DIRECT,no-resolve` 保证访问这台 Tailscale 服务器时走直连。客户端需要处于规则模式且连接 Tailscale；它不会自动启动 Tailscale。
+- ResearchGate 主站及子域名由 `ResearchDirect.list` 优先直连。其余规则顺序保留在 `ZJU.ini`。
+- `.list` 对应的 YAML Provider 可运行 `python3 update_providers.py` 同步；Mihomo 规则集每 86400 秒更新。
+- 初次导入可先临时关闭系统代理，获取新版订阅后切回规则模式；若电脑使用另一份配置，需要在那份配置顶部也加入服务器直连规则。
+- 脚本只适配本仓库的简化 INI，不执行全部 subconverter 选项。端口、DNS、TUN、控制接口和密钥通过客户端配置或 Clash for Linux 的 Mixin 管理。
+- 两端都需要能获取远程规则；直连规则决定路由，不保证网站在当前网络中可达。
+- 不要将订阅 URL、节点凭据或控制接口密钥提交到仓库。

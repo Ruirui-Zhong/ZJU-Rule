@@ -1,0 +1,17 @@
+# AI 平台独立分流；只收录平台域名，不将通用登录、支付、监控或 CDN 服务整体归入 AI。
+DOMAIN-SUFFIX,openai.com
+DOMAIN-SUFFIX,chatgpt.com
+DOMAIN-SUFFIX,oaistatic.com
+DOMAIN-SUFFIX,oaiusercontent.com
+DOMAIN-SUFFIX,openaiapi-site.azureedge.net
+DOMAIN,bard.google.com
+DOMAIN,gemini.google.com
+DOMAIN-SUFFIX,claude.ai
+DOMAIN-SUFFIX,coze.com
+DOMAIN-SUFFIX,forefront.ai
+DOMAIN-SUFFIX,poe.com
+DOMAIN-SUFFIX,poecdn.net
+# Claude API 官方接口：https://platform.claude.com/docs/en/api/messages/create
+DOMAIN,api.anthropic.com
+# Gemini API 官方接口：https://ai.google.dev/api/generate-content
+DOMAIN,generativelanguage.googleapis.com
