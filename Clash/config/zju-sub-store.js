@@ -36,8 +36,12 @@ const groupDefs = entries.filter(([key]) => key === 'custom_proxy_group')
 if (!groupDefs.length) throw new Error('INI 没有策略组');
 // 按订阅来源分类。家宽专用中转线路仍属于中转，不推断其落地国家。
 const notice = /通知|公告|剩余|重置|到期|流量|套餐|更新订阅|无节点可用/;
+// 信息节点保留来源标签，单独展示，不参与线路选择或测速。
+const infoProxies = sourceProxies.filter(proxy => notice.test(proxy.name ?? ''))
+  .map(proxy => ({ ...proxy, name: `[${proxy._subName ?? '未知订阅'}] ${proxy.name}` }));
 const proxies = sourceProxies.filter(proxy => !notice.test(proxy.name ?? ''))
   .map(proxy => ({ ...proxy }));
+const outputProxies = [...proxies, ...infoProxies];
 if (!proxies.length) throw new Error('过滤公告后没有可用节点');
 const categories = new Map();
 for (const proxy of proxies) {
@@ -48,10 +52,10 @@ for (const proxy of proxies) {
 const groupNames = new Set(groupDefs.map(parts => parts[0]));
 const newNames = ['🏠 家宽节点', '⚡ 高速节点', '🏠 家宽自动', '🏠 家宽故障转移',
   '🏠 家宽手动', '🛰️ 中转自动', '🛰️ 中转故障转移', '🛰️ 中转手动',
-  '⚡ 高速自动', '⚡ 高速故障转移', '🇩🇪 德国节点', '🇬🇧 英国节点', '🌐 其他高速节点'];
+  '⚡ 高速自动', '⚡ 高速故障转移', '🇩🇪 德国节点', '🇬🇧 英国节点', '🌐 其他高速节点', 'ℹ️ 订阅信息'];
 if (groupNames.size !== groupDefs.length) throw new Error('INI 策略组名称重复');
 const occupied = new Set(['DIRECT', 'REJECT', ...groupNames, ...newNames]);
-for (const proxy of proxies) {
+for (const proxy of outputProxies) {
   if (!proxy.name) throw new Error('订阅节点缺少名称');
   const original = proxy.name;
   let suffix = 2;
@@ -143,8 +147,11 @@ const remap = new Map([
   ['🔯 故障转移', '⚡ 高速故障转移'], ['🚀 手动切换', '🚀 节点选择'],
   ['🎥 奈飞节点', '⚡ 高速节点'],
 ]);
+if (infoProxies.length) {
+  groups.push(select('ℹ️ 订阅信息', ['DIRECT', ...infoProxies.map(proxy => proxy.name)]));
+}
 const replacementNames = new Set(groups.map(group => group.name));
-const hidden = new Set(['✉️ 通知公告', ...remap.keys(), ...regions.map(([name]) => name)]);
+const hidden = new Set(['✉️ 通知公告', 'ℹ️ 订阅信息', ...remap.keys(), ...regions.map(([name]) => name)]);
 const oldGroupNames = new Set(groupDefs.map(parts => parts[0]));
 for (const group of originalGroups) {
   if (hidden.has(group.name) || replacementNames.has(group.name)) continue;
@@ -162,14 +169,14 @@ for (const group of originalGroups) {
   if (!members.length) members.push('🚀 节点选择');
   groups.push({ ...group, proxies: members });
 }
-const outputNames = new Set(['DIRECT', 'REJECT', ...proxies.map(proxy => proxy.name), ...groups.map(group => group.name)]);
+const outputNames = new Set(['DIRECT', 'REJECT', ...outputProxies.map(proxy => proxy.name), ...groups.map(group => group.name)]);
 for (const group of groups) {
   for (const member of group.proxies) {
     if (!outputNames.has(member)) throw new Error(`输出策略组引用不存在：${member}`);
   }
 }
 // Sub-Store 来源信息仅用于分类，不写入最终客户端节点。
-for (const proxy of proxies) {
+for (const proxy of outputProxies) {
   for (const key of Object.keys(proxy)) if (key.startsWith('_')) delete proxy[key];
 }
 
@@ -207,5 +214,5 @@ if (!rules.length || !rules.at(-1).startsWith('MATCH,')) {
 }
 $content = ProxyUtils.yaml.dump({
   'mixed-port': 7890, 'allow-lan': false, mode: 'rule', 'log-level': 'info',
-  proxies, 'proxy-groups': groups, 'rule-providers': providers, rules,
+  proxies: outputProxies, 'proxy-groups': groups, 'rule-providers': providers, rules,
 });
