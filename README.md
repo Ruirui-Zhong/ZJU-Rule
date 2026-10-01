@@ -39,3 +39,5 @@
 - [AIPlatforms.list](Clash/AIPlatforms.list)：AI 平台独立策略组，可选择专用节点，其余代理流量使用“节点”。
 - [ResearchDirect.list](Clash/ResearchDirect.list)：ResearchGate 主站和子域名优先直连；`ZJU.ini` 同时内联优先直连 Tailscale 服务器 `100.101.106.44`。
 - 修改 `.list` 后可运行 `python3 update_providers.py` 同步 Provider。直连只决定路由，不保证网站可达。
+
+- Surge 客户端使用独立的 [Surge 适配脚本](Clash/config/zju-sub-store-surge.js)，当前输出 Hysteria2 节点；不要导入 Mihomo YAML。

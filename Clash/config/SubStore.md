@@ -36,3 +36,15 @@
 - 脚本只适配本仓库的简化 INI，不执行全部 subconverter 选项。端口、DNS、TUN、控制接口和密钥通过客户端配置或 Clash for Linux 的 Mixin 管理。
 - 两端都需要能获取远程规则；直连规则决定路由，不保证网站在当前网络中可达。
 - 不要将订阅 URL、节点凭据或控制接口密钥提交到仓库。
+
+## Surge 客户端
+
+Mihomo YAML 不能作为完整 Surge 配置导入。单独新建文件 `ZJU-Plinx-Surge`，远程来源仍用同一个 `ZJU.ini`，脚本改用 `zju-sub-store-surge.js`。服务器继续使用原 `ZJU-Plinx`，不要覆盖它。
+
+- 预览应包含 `[General]`、`[Proxy]`、`[Proxy Group]`、`[Rule]`，复制这个文件的配置下载链接给 Surge。
+- 当前订阅中只输出 Surge 支持的 Hysteria2 节点，VLESS 节点不输出；要求 Surge Mac 5.4+ 或 iOS 5.8+。特殊混淆参数可能要求更高版本，以客户端官方文档为准。
+- 手动选择、AI 独立节点、服务器和 ResearchGate 直连规则保持一致。订阅信息以 `direct` 别名显示，不作为代理节点参与分流。
+- 这是完整配置，可从 URL 导入 Surge；也可通过 `policy-path` 读取其中的 `[Proxy]` 节点，但这种方式不会导入分组和规则。只需要纯节点列表时，可在订阅管理中将组合订阅导出为 Surge 节点格式。
+- 当前输出为标准 Surge 配置，未声明 `MANAGED-CONFIG`，不承诺自动更新整份配置。需要时重新从 URL 导入；远程规则更新由客户端管理。
+
+协议与配置格式依据：[Surge 支持协议](https://manual.nssurge.com/policies/overview.html)、[Hysteria2](https://manual.nssurge.com/policies/hysteria2.html)、[远程配置](https://manual.nssurge.com/profile/managed-profile.html)。
