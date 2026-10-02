@@ -7,7 +7,7 @@
 
 ## 支持功能
 
-以下应用保留分流规则，简化版不单独生成各应用策略组。
+保留原 ZJU 及应用分流策略组；仅简化节点选择层级，ChatBot 改名为 AI 平台。
 
 + ZJU 内网资源/学术资源分流（直连访问/ RVPN访问）
 + 节点手动选择（中转 / 高速）
@@ -36,7 +36,7 @@
 
 - [配置步骤](Clash/config/SubStore.md)：组合订阅 → 远程 ZJU.ini → 文件脚本 → 完整 Mihomo 配置。
 - [适配脚本](Clash/config/zju-sub-store.js)：“节点” → “中转节点 / 高速节点”，直接手动选择，无自动或地区组；套餐信息独立展示。
-- [AIPlatforms.list](Clash/AIPlatforms.list)：AI 平台独立策略组，可选择专用节点，其余代理流量使用“节点”。
+- [AIPlatforms.list](Clash/AIPlatforms.list)：AI 平台独立策略组，可选择专用节点，其余应用仍保留各自策略组。
 - [ResearchDirect.list](Clash/ResearchDirect.list)：ResearchGate 主站和子域名优先直连；`ZJU.ini` 同时内联优先直连 Tailscale 服务器 `100.101.106.44`。
 - 修改 `.list` 后可运行 `python3 update_providers.py` 同步 Provider。直连只决定路由，不保证网站可达。
 

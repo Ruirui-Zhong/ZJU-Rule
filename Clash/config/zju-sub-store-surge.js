@@ -21,9 +21,10 @@ for (const raw of ini.replace(/^\uFEFF/, '').split(/\r?\n/)) {
 }
 const expectedGroups = ['🚀 节点', '🛰️ 中转节点', '⚡ 高速节点', '🤖 AI 平台', 'ℹ️ 订阅信息'];
 const definitions = entries.filter(([key]) => key === 'custom_proxy_group').map(([, value]) => value.split('`'));
-if (definitions.length !== expectedGroups.length || new Set(definitions.map(parts => parts[0])).size !== expectedGroups.length ||
-    definitions.some(([name, type]) => !expectedGroups.includes(name) || type !== 'select')) {
-  throw new Error('请使用配套的简化版 ZJU.ini（手动选择组）。');
+const definedNames = new Set(definitions.map(parts => parts[0]));
+if (definedNames.size !== definitions.length || expectedGroups.some(name => !definedNames.has(name)) ||
+    definitions.some(([, type]) => type !== 'select')) {
+  throw new Error('INI 需要完整的手动节点组，且策略组名称不可重复。');
 }
 const sourceProxies = await produceArtifact({
   type: 'collection', name: collectionName, platform: 'ClashMeta', produceType: 'internal',
@@ -37,7 +38,7 @@ const proxies = sourceProxies.filter(proxy => !notice.test(proxy.name ?? '') && 
 const infoProxies = sourceProxies.filter(proxy => notice.test(proxy.name ?? ''))
   .map(proxy => ({ ...proxy, name: `[${proxy._subName ?? '未知订阅'}] ${proxy.name}` }));
 const outputProxies = [...proxies, ...infoProxies];
-const occupied = new Set(['DIRECT', 'REJECT', ...expectedGroups]);
+const occupied = new Set(['DIRECT', 'REJECT', ...definedNames]);
 for (const proxy of outputProxies) {
   if (!proxy.name) throw new Error('订阅节点缺少名称');
   proxy.name = proxy.name.replace(/[=,\r\n"]/g, ' ').trim();
@@ -64,6 +65,37 @@ const groups = [
   select('🤖 AI 平台', ['🚀 节点', ...proxies.map(proxy => proxy.name)]),
   ...(infoProxies.length ? [select('ℹ️ 订阅信息', ['DIRECT', ...infoProxies.map(proxy => proxy.name)])] : []),
 ];
+// 应用策略组从 INI 读取，保留默认顺序及校园/音乐专用节点匹配。
+for (const [name, , ...selectors] of definitions) {
+  if (expectedGroups.includes(name)) continue;
+  const members = [];
+  for (const selector of selectors) {
+    if (selector.startsWith('[]')) {
+      const member = selector.slice(2);
+      if (!definedNames.has(member) && !['DIRECT', 'REJECT'].includes(member)) {
+        throw new Error(`应用策略组引用不存在：${member}`);
+      }
+      members.push(member);
+    } else {
+      const pattern = new RegExp(selector);
+      members.push(...proxies.filter(proxy => pattern.test(proxy.name)).map(proxy => proxy.name));
+    }
+  }
+  const selected = [...new Set(members)];
+  if (!selected.length) throw new Error(`应用策略组没有可用成员：${name}`);
+  groups.push(select(name, selected));
+}
+const outputNames = new Set(['DIRECT', 'REJECT', ...outputProxies.map(proxy => proxy.name), ...groups.map(group => group.name)]);
+for (const group of groups) {
+  for (const member of group.proxies) if (!outputNames.has(member)) throw new Error(`输出策略引用不存在：${member}`);
+}
+function visitGroup(name, path = new Set()) {
+  if (path.has(name)) throw new Error(`策略组循环引用：${name}`);
+  const group = groups.find(item => item.name === name);
+  if (!group) return;
+  for (const member of group.proxies) visitGroup(member, new Set([...path, name]));
+}
+for (const group of groups) visitGroup(group.name);
 const policyNames = new Set(['DIRECT', 'REJECT', ...groups.map(group => group.name)]);
 const providers = {}, rules = [];
 for (const [key, value] of entries) {
