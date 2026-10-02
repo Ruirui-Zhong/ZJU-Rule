@@ -1,0 +1,4 @@
+payload:
+  # 自定义优先代理：避免目标域名被国内直连或 GEOIP 规则接管。
+  # Plinx 官网及其子域名。
+  - DOMAIN-SUFFIX,plinx.net
