@@ -64,7 +64,7 @@ class ScholarRules(unittest.TestCase):
                 self.assertEqual(self.first_policy(host), ACADEMIC)
 
     def test_search_does_not_depend_on_general_selection(self):
-        self.assertEqual(self.groups[SEARCH][0], '[]🏠 家宽节点')
+        self.assertEqual(self.groups[SEARCH][0], '[]⚡ 高速节点')
         self.assertNotIn('[]🚀 节点选择', self.groups[SEARCH])
         for name in ['🏠 家宽节点', '⚡ 高速节点']:
             self.assertTrue(all(not x.startswith('[]') for x in self.groups[name]))
@@ -85,11 +85,8 @@ class ScholarRules(unittest.TestCase):
                 self.assertNotEqual(self.first_policy(host), SEARCH)
 
     def test_compact_groups_and_application_routes(self):
-        self.assertEqual(set(self.groups), {
-            '🚀 节点选择', '🏠 家宽节点', '⚡ 高速节点', '🤖 AI 平台',
-            '🔎 学术搜索', '📚 学术资源', '🔐 公共验证', 'ℹ️ 订阅信息',
-            '✔ ZJU内网', '🌐 通用服务',
-        })
+        expected = json.loads((ROOT / 'tests/fixtures/group_order.json').read_text())
+        self.assertEqual(list(self.groups), expected)
         self.assertEqual(self.groups['🚀 节点选择'][0], '[]⚡ 高速节点')
         self.assertTrue(all(not x.startswith('[]') for x in self.groups['🚀 节点选择'][1:]))
         self.assertEqual(self.groups['✔ ZJU内网'][0], '[]DIRECT')
@@ -98,16 +95,19 @@ class ScholarRules(unittest.TestCase):
         self.assertIn('[]🚀 节点选择', self.groups['🌐 通用服务'])
         for policy, path, rules in self.sources:
             self.assertIn(policy, {'DIRECT', 'REJECT', *self.groups})
-        for host in ['www.youtube.com', 'www.netflix.com', 'api.telegram.org']:
+        for host in ['www.youtube.com', 'www.netflix.com']:
             with self.subTest(host=host):
-                self.assertEqual(self.first_policy(host), '🚀 节点选择')
-        for host in ['www.microsoft.com', 'www.apple.com', 'www.bilibili.com']:
+                self.assertEqual(self.first_policy(host), '🌍 国外媒体')
+        self.assertEqual(self.first_policy('api.telegram.org'), '🚀 节点选择')
+        self.assertEqual(self.first_policy('www.bilibili.com'), '🌏 国内媒体')
+        for host in ['www.microsoft.com', 'www.apple.com']:
             with self.subTest(host=host):
                 self.assertEqual(self.first_policy(host), '🌐 通用服务')
         for policy, path, _ in self.sources:
             if path.name in ['BanAD.list', 'BanProgramAD.list', 'BanEasyList.list',
                              'BanEasyListChina.list', 'BanEasyPrivacy.list']:
-                self.assertEqual(policy, 'REJECT')
+                expected = '🛡️ 隐私防护' if path.name == 'BanEasyPrivacy.list' else '🛑 广告拦截'
+                self.assertEqual(policy, expected)
 
     def test_all_sources_order_and_default_directions_preserved(self):
         baseline = json.loads((ROOT / 'tests/fixtures/routing_defaults.json').read_text())
@@ -122,6 +122,11 @@ class ScholarRules(unittest.TestCase):
                 policy, source = line[8:].split(',', 1)
                 actual.append({'source': source, 'default': resolve(policy)})
         self.assertEqual(actual, baseline)
+        self.assertEqual(self.groups['🐟 漏网之鱼'][0], '[]⚡ 高速节点')
+        self.assertEqual(self.groups['🌍 国外媒体'][0], '[]⚡ 高速节点')
+        self.assertEqual(self.groups['🌏 国内媒体'][0], '[]DIRECT')
+        self.assertEqual(self.groups['🛑 广告拦截'][0], '[]REJECT')
+        self.assertEqual(self.groups['🛡️ 隐私防护'][0], '[]REJECT')
         self.assertEqual(self.first_policy('rvpn.zju.edu.cn'), 'DIRECT')
         self.assertEqual(self.first_policy('mail.google.com'), '🚀 节点选择')
         self.assertEqual(self.first_policy('login.microsoftonline.com'), '🌐 通用服务')

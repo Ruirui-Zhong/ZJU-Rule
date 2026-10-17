@@ -85,6 +85,9 @@ for (const [name, , ...selectors] of definitions) {
   if (!selected.length) throw new Error(`应用策略组没有可用成员：${name}`);
   groups.push(select(name, selected));
 }
+// 展示顺序严格遵循 INI，不由特殊分组的构造顺序决定。
+const groupOrder = new Map(definitions.map(([name], index) => [name, index]));
+groups.sort((a, b) => groupOrder.get(a.name) - groupOrder.get(b.name));
 const outputNames = new Set(['DIRECT', 'REJECT', ...outputProxies.map(proxy => proxy.name), ...groups.map(group => group.name)]);
 for (const group of groups) {
   for (const member of group.proxies) if (!outputNames.has(member)) throw new Error(`输出策略引用不存在：${member}`);
