@@ -64,7 +64,7 @@ class ScholarRules(unittest.TestCase):
 
     def test_search_does_not_depend_on_general_selection(self):
         self.assertEqual(self.groups[SEARCH][0], '[]🏠 家宽节点')
-        self.assertNotIn('[]🚀 节点选择', self.groups[SEARCH])
+        self.assertNotIn('[]🚀 默认代理', self.groups[SEARCH])
         for name in ['🏠 家宽节点', '⚡ 高速节点']:
             self.assertTrue(all(not x.startswith('[]') for x in self.groups[name]))
         self.assertEqual(self.groups[ACADEMIC][0], '[]DIRECT')
@@ -72,7 +72,7 @@ class ScholarRules(unittest.TestCase):
     def test_shared_challenge_and_researchgate_preserved(self):
         self.assertEqual(self.first_policy('challenges.cloudflare.com'), '🔐 公共验证')
         self.assertEqual(self.first_policy('www.researchgate.net'), 'DIRECT')
-        self.assertEqual(self.first_policy('www.zju.edu.cn'), '✔ ZJU内网')
+        self.assertEqual(self.first_policy('www.zju.edu.cn'), 'DIRECT')
 
     def test_no_google_or_public_cdn_wide_takeover(self):
         hosts = ['mail.google.com', 'drive.google.com', 'maps.google.com',
@@ -82,6 +82,25 @@ class ScholarRules(unittest.TestCase):
         for host in hosts:
             with self.subTest(host=host):
                 self.assertNotEqual(self.first_policy(host), SEARCH)
+
+    def test_compact_groups_and_application_routes(self):
+        self.assertEqual(set(self.groups), {
+            '🚀 默认代理', '🏠 家宽节点', '⚡ 高速节点', '🤖 AI 平台',
+            '🔎 学术搜索', '📚 学术资源', '🔐 公共验证', 'ℹ️ 订阅信息',
+        })
+        self.assertEqual(self.groups['🚀 默认代理'], ['[]🏠 家宽节点', '[]⚡ 高速节点'])
+        for policy, path, rules in self.sources:
+            self.assertIn(policy, {'DIRECT', 'REJECT', *self.groups})
+        for host in ['www.youtube.com', 'www.netflix.com', 'api.telegram.org']:
+            with self.subTest(host=host):
+                self.assertEqual(self.first_policy(host), '🚀 默认代理')
+        for host in ['www.microsoft.com', 'www.apple.com', 'www.bilibili.com']:
+            with self.subTest(host=host):
+                self.assertEqual(self.first_policy(host), 'DIRECT')
+        for policy, path, _ in self.sources:
+            if path.name in ['BanAD.list', 'BanProgramAD.list', 'BanEasyList.list',
+                             'BanEasyListChina.list', 'BanEasyPrivacy.list']:
+                self.assertEqual(policy, 'REJECT')
 
     def test_new_provider_mirrors_and_sources_exist(self):
         for name in ['ScholarProxy', 'AcademicSupplement', 'AcademicPublishers']:
