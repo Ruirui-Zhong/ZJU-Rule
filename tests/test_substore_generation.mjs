@@ -21,7 +21,7 @@ for(const file of ['zju-sub-store.js','zju-sub-store-surge.js']){
    const cfg=JSON.parse(output),groups=cfg['proxy-groups'];
    assert.deepEqual(new Set(groups.map(x=>x.name)),new Set(expected.filter(x=>withInfo||x!=='ℹ️ 订阅信息')));
    const group=n=>groups.find(x=>x.name===n);
-   assert.deepEqual(group('🚀 节点选择').proxies,['家宽测试','JP[03]-测试']);
+   assert.deepEqual(group('🚀 节点选择').proxies,['⚡ 高速节点','家宽测试','JP[03]-测试']);
    assert.deepEqual(group('🏠 家宽节点').proxies,['家宽测试']);
    assert.deepEqual(group('⚡ 高速节点').proxies,['JP[03]-测试']);
    assert.equal(group('📚 学术资源').proxies[0],'DIRECT');
@@ -32,7 +32,7 @@ for(const file of ['zju-sub-store.js','zju-sub-store-surge.js']){
    const groupText=output.split('[Proxy Group]\n')[1].split('[Rule]')[0];
    const groups=groupText.trim().split('\n');
    assert.equal(groups.length,withInfo?10:9);
-   assert(groups.includes('🚀 节点选择 = select, 家宽测试, JP[03]-测试'));
+   assert(groups.includes('🚀 节点选择 = select, ⚡ 高速节点, 家宽测试, JP[03]-测试'));
    assert(output.includes('FINAL,🚀 节点选择'));
    assert(output.includes('✔ ZJU内网 = select, DIRECT, 🚀 节点选择'));
    assert(output.includes('🌐 通用服务 = select, DIRECT, 🚀 节点选择'));

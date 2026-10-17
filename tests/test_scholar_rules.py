@@ -90,7 +90,8 @@ class ScholarRules(unittest.TestCase):
             '🔎 学术搜索', '📚 学术资源', '🔐 公共验证', 'ℹ️ 订阅信息',
             '✔ ZJU内网', '🌐 通用服务',
         })
-        self.assertTrue(all(not x.startswith('[]') for x in self.groups['🚀 节点选择']))
+        self.assertEqual(self.groups['🚀 节点选择'][0], '[]⚡ 高速节点')
+        self.assertTrue(all(not x.startswith('[]') for x in self.groups['🚀 节点选择'][1:]))
         self.assertEqual(self.groups['✔ ZJU内网'][0], '[]DIRECT')
         self.assertIn('[]🚀 节点选择', self.groups['✔ ZJU内网'])
         self.assertEqual(self.groups['🌐 通用服务'][0], '[]DIRECT')
