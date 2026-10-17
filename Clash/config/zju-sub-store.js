@@ -18,7 +18,7 @@ for (const raw of ini.replace(/^\uFEFF/, '').split(/\r?\n/)) {
   if (at < 0) throw new Error('INI 存在无法解析的行');
   entries.push([line.slice(0, at).trim(), line.slice(at + 1).trim()]);
 }
-const expectedGroups = ['🚀 默认代理', '🏠 家宽节点', '⚡ 高速节点', '🤖 AI 平台', 'ℹ️ 订阅信息'];
+const expectedGroups = ['🚀 节点选择', '🏠 家宽节点', '⚡ 高速节点', '🤖 AI 平台', 'ℹ️ 订阅信息'];
 const definitions = entries.filter(([key]) => key === 'custom_proxy_group').map(([, value]) => value.split('`'));
 const definedNames = new Set(definitions.map(parts => parts[0]));
 if (definedNames.size !== definitions.length || expectedGroups.some(name => !definedNames.has(name)) ||
@@ -54,14 +54,14 @@ for (const proxy of proxies) {
 if (!residential.length || !high.length) throw new Error('家宽或高速订阅没有可用节点，请检查两个订阅');
 const select = (name, members) => ({ name, type: 'select', proxies: members });
 const groups = [
-  select('🚀 默认代理', ['🏠 家宽节点', '⚡ 高速节点']),
+  select('🚀 节点选择', proxies.map(proxy => proxy.name)),
   select('🏠 家宽节点', residential),
   select('⚡ 高速节点', high),
   // AI 默认使用家宽组；也可固定到单个节点。
   select('🤖 AI 平台', ['🏠 家宽节点', '⚡ 高速节点', ...proxies.map(proxy => proxy.name)]),
   ...(infoProxies.length ? [select('ℹ️ 订阅信息', ['DIRECT', ...infoProxies.map(proxy => proxy.name)])] : []),
 ];
-// 独立学术/验证策略从 INI 读取；普通应用直接使用默认代理、DIRECT 或 REJECT。
+// 校园、通用服务及学术/验证组从 INI 读取，保留独立出口切换。
 for (const [name, , ...selectors] of definitions) {
   if (expectedGroups.includes(name)) continue;
   const members = [];

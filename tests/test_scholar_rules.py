@@ -1,6 +1,7 @@
 """验证域名规则的首次匹配和策略依赖，不发起网络请求。"""
 from pathlib import Path
 import unittest
+import json
 
 ROOT = Path(__file__).resolve().parents[1]
 SEARCH = '🔎 学术搜索'
@@ -64,7 +65,7 @@ class ScholarRules(unittest.TestCase):
 
     def test_search_does_not_depend_on_general_selection(self):
         self.assertEqual(self.groups[SEARCH][0], '[]🏠 家宽节点')
-        self.assertNotIn('[]🚀 默认代理', self.groups[SEARCH])
+        self.assertNotIn('[]🚀 节点选择', self.groups[SEARCH])
         for name in ['🏠 家宽节点', '⚡ 高速节点']:
             self.assertTrue(all(not x.startswith('[]') for x in self.groups[name]))
         self.assertEqual(self.groups[ACADEMIC][0], '[]DIRECT')
@@ -72,7 +73,7 @@ class ScholarRules(unittest.TestCase):
     def test_shared_challenge_and_researchgate_preserved(self):
         self.assertEqual(self.first_policy('challenges.cloudflare.com'), '🔐 公共验证')
         self.assertEqual(self.first_policy('www.researchgate.net'), 'DIRECT')
-        self.assertEqual(self.first_policy('www.zju.edu.cn'), 'DIRECT')
+        self.assertEqual(self.first_policy('www.zju.edu.cn'), '✔ ZJU内网')
 
     def test_no_google_or_public_cdn_wide_takeover(self):
         hosts = ['mail.google.com', 'drive.google.com', 'maps.google.com',
@@ -85,22 +86,44 @@ class ScholarRules(unittest.TestCase):
 
     def test_compact_groups_and_application_routes(self):
         self.assertEqual(set(self.groups), {
-            '🚀 默认代理', '🏠 家宽节点', '⚡ 高速节点', '🤖 AI 平台',
+            '🚀 节点选择', '🏠 家宽节点', '⚡ 高速节点', '🤖 AI 平台',
             '🔎 学术搜索', '📚 学术资源', '🔐 公共验证', 'ℹ️ 订阅信息',
+            '✔ ZJU内网', '🌐 通用服务',
         })
-        self.assertEqual(self.groups['🚀 默认代理'], ['[]🏠 家宽节点', '[]⚡ 高速节点'])
+        self.assertTrue(all(not x.startswith('[]') for x in self.groups['🚀 节点选择']))
+        self.assertEqual(self.groups['✔ ZJU内网'][0], '[]DIRECT')
+        self.assertIn('[]🚀 节点选择', self.groups['✔ ZJU内网'])
+        self.assertEqual(self.groups['🌐 通用服务'][0], '[]DIRECT')
+        self.assertIn('[]🚀 节点选择', self.groups['🌐 通用服务'])
         for policy, path, rules in self.sources:
             self.assertIn(policy, {'DIRECT', 'REJECT', *self.groups})
         for host in ['www.youtube.com', 'www.netflix.com', 'api.telegram.org']:
             with self.subTest(host=host):
-                self.assertEqual(self.first_policy(host), '🚀 默认代理')
+                self.assertEqual(self.first_policy(host), '🚀 节点选择')
         for host in ['www.microsoft.com', 'www.apple.com', 'www.bilibili.com']:
             with self.subTest(host=host):
-                self.assertEqual(self.first_policy(host), 'DIRECT')
+                self.assertEqual(self.first_policy(host), '🌐 通用服务')
         for policy, path, _ in self.sources:
             if path.name in ['BanAD.list', 'BanProgramAD.list', 'BanEasyList.list',
                              'BanEasyListChina.list', 'BanEasyPrivacy.list']:
                 self.assertEqual(policy, 'REJECT')
+
+    def test_all_sources_order_and_default_directions_preserved(self):
+        baseline = json.loads((ROOT / 'tests/fixtures/routing_defaults.json').read_text())
+        def resolve(policy):
+            if policy in ['DIRECT', 'REJECT']:
+                return policy
+            first = self.groups[policy][0]
+            return resolve(first[2:]) if first.startswith('[]') else 'PROXY'
+        actual = []
+        for line in (ROOT / 'Clash/config/ZJU.ini').read_text().splitlines():
+            if line.startswith('ruleset='):
+                policy, source = line[8:].split(',', 1)
+                actual.append({'source': source, 'default': resolve(policy)})
+        self.assertEqual(actual, baseline)
+        self.assertEqual(self.first_policy('rvpn.zju.edu.cn'), 'DIRECT')
+        self.assertEqual(self.first_policy('mail.google.com'), '🚀 节点选择')
+        self.assertEqual(self.first_policy('login.microsoftonline.com'), '🌐 通用服务')
 
     def test_new_provider_mirrors_and_sources_exist(self):
         for name in ['ScholarProxy', 'AcademicSupplement', 'AcademicPublishers']:

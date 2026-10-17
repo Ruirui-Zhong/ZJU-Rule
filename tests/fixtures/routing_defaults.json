@@ -1,0 +1,198 @@
+[
+  {
+    "source": "[]IP-CIDR,100.101.106.44/32,no-resolve",
+    "default": "DIRECT"
+  },
+  {
+    "source": "https://raw.githubusercontent.com/Ruirui-Zhong/ZJU-Rule/main/Clash/ProxyPriority.list",
+    "default": "PROXY"
+  },
+  {
+    "source": "https://raw.githubusercontent.com/Ruirui-Zhong/ZJU-Rule/main/Clash/ScholarProxy.list",
+    "default": "PROXY"
+  },
+  {
+    "source": "https://raw.githubusercontent.com/Ruirui-Zhong/ZJU-Rule/main/Clash/SharedVerification.list",
+    "default": "DIRECT"
+  },
+  {
+    "source": "https://raw.githubusercontent.com/Ruirui-Zhong/ZJU-Rule/main/Clash/ResearchDirect.list",
+    "default": "DIRECT"
+  },
+  {
+    "source": "https://raw.githubusercontent.com/Ruirui-Zhong/ZJU-Rule/main/Clash/Ruleset/PrivateTracker.list",
+    "default": "DIRECT"
+  },
+  {
+    "source": "https://raw.githubusercontent.com/Ruirui-Zhong/ZJU-Rule/main/Clash/ZJU-Rule.list",
+    "default": "DIRECT"
+  },
+  {
+    "source": "https://raw.githubusercontent.com/Ruirui-Zhong/ZJU-Rule/main/Clash/ZJU.list",
+    "default": "DIRECT"
+  },
+  {
+    "source": "https://raw.githubusercontent.com/Ruirui-Zhong/ZJU-Rule/main/Clash/AcademicPublishers.list",
+    "default": "DIRECT"
+  },
+  {
+    "source": "https://raw.githubusercontent.com/Ruirui-Zhong/ZJU-Rule/main/Clash/AcademicSupplement.list",
+    "default": "DIRECT"
+  },
+  {
+    "source": "https://raw.githubusercontent.com/Ruirui-Zhong/ZJU-Rule/main/Clash/ZJU-More-Scholar.list",
+    "default": "DIRECT"
+  },
+  {
+    "source": "https://raw.githubusercontent.com/Ruirui-Zhong/ZJU-Rule/main/Clash/Ruleset/Scholar.list",
+    "default": "DIRECT"
+  },
+  {
+    "source": "https://raw.githubusercontent.com/Ruirui-Zhong/ZJU-Rule/main/Clash/AIPlatforms.list",
+    "default": "PROXY"
+  },
+  {
+    "source": "https://raw.githubusercontent.com/Ruirui-Zhong/ZJU-Rule/main/Clash/LocalAreaNetwork.list",
+    "default": "DIRECT"
+  },
+  {
+    "source": "https://raw.githubusercontent.com/Ruirui-Zhong/ZJU-Rule/main/Clash/UnBan.list",
+    "default": "DIRECT"
+  },
+  {
+    "source": "https://raw.githubusercontent.com/Ruirui-Zhong/ZJU-Rule/main/Clash/BanAD.list",
+    "default": "REJECT"
+  },
+  {
+    "source": "https://raw.githubusercontent.com/Ruirui-Zhong/ZJU-Rule/main/Clash/BanProgramAD.list",
+    "default": "REJECT"
+  },
+  {
+    "source": "https://raw.githubusercontent.com/Ruirui-Zhong/ZJU-Rule/main/Clash/BanEasyList.list",
+    "default": "REJECT"
+  },
+  {
+    "source": "https://raw.githubusercontent.com/Ruirui-Zhong/ZJU-Rule/main/Clash/BanEasyListChina.list",
+    "default": "REJECT"
+  },
+  {
+    "source": "https://raw.githubusercontent.com/Ruirui-Zhong/ZJU-Rule/main/Clash/BanEasyPrivacy.list",
+    "default": "REJECT"
+  },
+  {
+    "source": "https://raw.githubusercontent.com/Ruirui-Zhong/ZJU-Rule/main/Clash/Ruleset/GoogleFCM.list",
+    "default": "DIRECT"
+  },
+  {
+    "source": "https://raw.githubusercontent.com/Ruirui-Zhong/ZJU-Rule/main/Clash/GoogleCN.list",
+    "default": "DIRECT"
+  },
+  {
+    "source": "https://raw.githubusercontent.com/Ruirui-Zhong/ZJU-Rule/main/Clash/Ruleset/SteamCN.list",
+    "default": "DIRECT"
+  },
+  {
+    "source": "https://raw.githubusercontent.com/Ruirui-Zhong/ZJU-Rule/main/Clash/Ruleset/Adobe.list",
+    "default": "DIRECT"
+  },
+  {
+    "source": "https://raw.githubusercontent.com/Ruirui-Zhong/ZJU-Rule/main/Clash/Bing.list",
+    "default": "DIRECT"
+  },
+  {
+    "source": "https://raw.githubusercontent.com/Ruirui-Zhong/ZJU-Rule/main/Clash/OneDrive.list",
+    "default": "DIRECT"
+  },
+  {
+    "source": "https://raw.githubusercontent.com/Ruirui-Zhong/ZJU-Rule/main/Clash/Microsoft.list",
+    "default": "DIRECT"
+  },
+  {
+    "source": "https://raw.githubusercontent.com/Ruirui-Zhong/ZJU-Rule/main/Clash/Apple.list",
+    "default": "DIRECT"
+  },
+  {
+    "source": "https://raw.githubusercontent.com/Ruirui-Zhong/ZJU-Rule/main/Clash/Telegram.list",
+    "default": "PROXY"
+  },
+  {
+    "source": "https://raw.githubusercontent.com/Ruirui-Zhong/ZJU-Rule/main/Clash/Ruleset/NetEaseMusic.list",
+    "default": "DIRECT"
+  },
+  {
+    "source": "https://raw.githubusercontent.com/Ruirui-Zhong/ZJU-Rule/main/Clash/Ruleset/Epic.list",
+    "default": "DIRECT"
+  },
+  {
+    "source": "https://raw.githubusercontent.com/Ruirui-Zhong/ZJU-Rule/main/Clash/Ruleset/Origin.list",
+    "default": "DIRECT"
+  },
+  {
+    "source": "https://raw.githubusercontent.com/Ruirui-Zhong/ZJU-Rule/main/Clash/Ruleset/Sony.list",
+    "default": "DIRECT"
+  },
+  {
+    "source": "https://raw.githubusercontent.com/Ruirui-Zhong/ZJU-Rule/main/Clash/Ruleset/Steam.list",
+    "default": "DIRECT"
+  },
+  {
+    "source": "https://raw.githubusercontent.com/Ruirui-Zhong/ZJU-Rule/main/Clash/Ruleset/Nintendo.list",
+    "default": "DIRECT"
+  },
+  {
+    "source": "https://raw.githubusercontent.com/Ruirui-Zhong/ZJU-Rule/main/Clash/Ruleset/YouTube.list",
+    "default": "PROXY"
+  },
+  {
+    "source": "https://raw.githubusercontent.com/Ruirui-Zhong/ZJU-Rule/main/Clash/Ruleset/Netflix.list",
+    "default": "PROXY"
+  },
+  {
+    "source": "https://raw.githubusercontent.com/Ruirui-Zhong/ZJU-Rule/main/Clash/Ruleset/Bahamut.list",
+    "default": "PROXY"
+  },
+  {
+    "source": "https://raw.githubusercontent.com/Ruirui-Zhong/ZJU-Rule/main/Clash/Ruleset/BilibiliHMT.list",
+    "default": "DIRECT"
+  },
+  {
+    "source": "https://raw.githubusercontent.com/Ruirui-Zhong/ZJU-Rule/main/Clash/Ruleset/Bilibili.list",
+    "default": "DIRECT"
+  },
+  {
+    "source": "https://raw.githubusercontent.com/Ruirui-Zhong/ZJU-Rule/main/Clash/ChinaMedia.list",
+    "default": "DIRECT"
+  },
+  {
+    "source": "https://raw.githubusercontent.com/Ruirui-Zhong/ZJU-Rule/main/Clash/ProxyMedia.list",
+    "default": "PROXY"
+  },
+  {
+    "source": "https://raw.githubusercontent.com/Ruirui-Zhong/ZJU-Rule/main/Clash/ProxyGFWlist.list",
+    "default": "PROXY"
+  },
+  {
+    "source": "https://raw.githubusercontent.com/Ruirui-Zhong/ZJU-Rule/main/Clash/ChinaDomain.list",
+    "default": "DIRECT"
+  },
+  {
+    "source": "https://raw.githubusercontent.com/Ruirui-Zhong/ZJU-Rule/main/Clash/ChinaCompanyIp.list",
+    "default": "DIRECT"
+  },
+  {
+    "source": "https://raw.githubusercontent.com/Ruirui-Zhong/ZJU-Rule/main/Clash/Download.list",
+    "default": "DIRECT"
+  },
+  {
+    "source": "https://raw.githubusercontent.com/Ruirui-Zhong/ZJU-Rule/main/Clash/ZJU-IP.list",
+    "default": "DIRECT"
+  },
+  {
+    "source": "[]GEOIP,CN",
+    "default": "DIRECT"
+  },
+  {
+    "source": "[]FINAL",
+    "default": "PROXY"
+  }
+]
