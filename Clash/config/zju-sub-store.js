@@ -54,12 +54,12 @@ for (const proxy of proxies) {
 if (!residential.length || !high.length) throw new Error('家宽或高速订阅没有可用节点，请检查两个订阅');
 const select = (name, members) => ({ name, type: 'select', proxies: members });
 const groups = [
+  ...(infoProxies.length ? [select('ℹ️ 订阅信息', ['DIRECT', ...infoProxies.map(proxy => proxy.name)])] : []),
   select('🚀 节点选择', ['⚡ 高速节点', ...proxies.map(proxy => proxy.name)]),
   select('🏠 家宽节点', residential),
   select('⚡ 高速节点', high),
   // AI 默认使用家宽组；也可固定到单个节点。
   select('🤖 AI 平台', ['🏠 家宽节点', '⚡ 高速节点', ...proxies.map(proxy => proxy.name)]),
-  ...(infoProxies.length ? [select('ℹ️ 订阅信息', ['DIRECT', ...infoProxies.map(proxy => proxy.name)])] : []),
 ];
 // 校园、通用服务及学术/验证组从 INI 读取，保留独立出口切换。
 for (const [name, , ...selectors] of definitions) {
