@@ -1,22 +1,12 @@
 payload:
-  # AI 平台：继承原 OpenAI/ChatBot 域名规则，并保留新增 API 规则。
+  # AI 平台专属域名；公共验证单独分流，通用认证/支付/遥测不整体归入 AI。
   - DOMAIN-KEYWORD,openai
   - DOMAIN,gemini.google.com
-  - DOMAIN-SUFFIX,auth0.com
-  - DOMAIN-SUFFIX,challenges.cloudflare.com
   - DOMAIN-SUFFIX,chatgpt.com
-  - DOMAIN-SUFFIX,client-api.arkoselabs.com
-  - DOMAIN-SUFFIX,events.statsigapi.net
-  - DOMAIN-SUFFIX,featuregates.org
-  - DOMAIN-SUFFIX,identrust.com
-  - DOMAIN-SUFFIX,intercom.io
-  - DOMAIN-SUFFIX,intercomcdn.com
   - DOMAIN-SUFFIX,oaistatic.com
   - DOMAIN-SUFFIX,oaiusercontent.com
   - DOMAIN-SUFFIX,openai.com
   - DOMAIN-SUFFIX,openaiapi-site.azureedge.net
-  - DOMAIN-SUFFIX,sentry.io
-  - DOMAIN-SUFFIX,stripe.com
   - DOMAIN-SUFFIX,bard.google.com
   - DOMAIN-SUFFIX,claude.ai
   - DOMAIN-SUFFIX,coze.com

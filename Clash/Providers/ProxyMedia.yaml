@@ -95,7 +95,6 @@ payload:
   - DOMAIN-SUFFIX,dcblivedazn.akamaized.net
   - DOMAIN-SUFFIX,indazn.com
   - DOMAIN-SUFFIX,indaznlab.com
-  - DOMAIN-SUFFIX,sentry.io
 
   # Deezer
   # USER-AGENT,Deezer*
@@ -338,21 +337,11 @@ payload:
   # OpenAi
   - DOMAIN-KEYWORD,openai
   - DOMAIN,gemini.google.com
-  - DOMAIN-SUFFIX,auth0.com
-  - DOMAIN-SUFFIX,challenges.cloudflare.com
   - DOMAIN-SUFFIX,chatgpt.com
-  - DOMAIN-SUFFIX,client-api.arkoselabs.com
-  - DOMAIN-SUFFIX,events.statsigapi.net
-  - DOMAIN-SUFFIX,featuregates.org
-  - DOMAIN-SUFFIX,identrust.com
-  - DOMAIN-SUFFIX,intercom.io
-  - DOMAIN-SUFFIX,intercomcdn.com
   - DOMAIN-SUFFIX,oaistatic.com
   - DOMAIN-SUFFIX,oaiusercontent.com
   - DOMAIN-SUFFIX,openai.com
   - DOMAIN-SUFFIX,openaiapi-site.azureedge.net
-  - DOMAIN-SUFFIX,sentry.io
-  - DOMAIN-SUFFIX,stripe.com
 
   # PBS
   # USER-AGENT,PBS*

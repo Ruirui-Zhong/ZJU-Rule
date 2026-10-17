@@ -1,7 +1,7 @@
 // Sub-Store 普通文件：远程 ZJU.ini -> 脚本操作。
 // 手动选节点；不生成自动测速、故障转移或地区组。
 const collectionName = 'Plinx';
-const sourceCategory = { 'Plinx-home': 'relay', 'Plinx-high': 'high' };
+const sourceCategory = { 'Plinx-home': 'residential', 'Plinx-high': 'high' };
 const ownRoot = 'https://raw.githubusercontent.com/Ruirui-Zhong/ZJU-Rule/main/';
 const ini = $content ?? $files?.[0];
 if (typeof ini !== 'string' || !ini.includes('[custom]')) {
@@ -18,12 +18,12 @@ for (const raw of ini.replace(/^\uFEFF/, '').split(/\r?\n/)) {
   if (at < 0) throw new Error('INI 存在无法解析的行');
   entries.push([line.slice(0, at).trim(), line.slice(at + 1).trim()]);
 }
-const expectedGroups = ['🚀 手动节点', '🛰️ 中转节点', '⚡ 高速节点', '🤖 AI 平台', 'ℹ️ 订阅信息'];
+const expectedGroups = ['🚀 节点选择', '🏠 家宽节点', '⚡ 高速节点', '🤖 AI 平台', 'ℹ️ 订阅信息'];
 const definitions = entries.filter(([key]) => key === 'custom_proxy_group').map(([, value]) => value.split('`'));
 const definedNames = new Set(definitions.map(parts => parts[0]));
 if (definedNames.size !== definitions.length || expectedGroups.some(name => !definedNames.has(name)) ||
     definitions.some(([, type]) => type !== 'select')) {
-  throw new Error('INI 需要完整的手动节点组，且策略组名称不可重复。');
+  throw new Error('INI 需要完整的节点分类组，且策略组名称不可重复。');
 }
 const sourceProxies = await produceArtifact({
   type: 'collection', name: collectionName, platform: 'ClashMeta', produceType: 'internal',
@@ -44,21 +44,21 @@ for (const proxy of outputProxies) {
   while (occupied.has(proxy.name)) proxy.name = `${original} (${suffix++})`;
   occupied.add(proxy.name);
 }
-const relay = [], high = [];
+const residential = [], high = [];
 for (const proxy of proxies) {
   const category = sourceCategory[proxy._subName];
-  if (category === 'relay') relay.push(proxy.name);
+  if (category === 'residential') residential.push(proxy.name);
   else if (category === 'high') high.push(proxy.name);
-  else throw new Error('发现未知订阅来源，请在 sourceCategory 中登记为 relay 或 high');
+  else throw new Error('发现未知订阅来源，请在 sourceCategory 中登记为 residential 或 high');
 }
-if (!relay.length || !high.length) throw new Error('中转或高速订阅没有可用节点，请检查两个订阅');
+if (!residential.length || !high.length) throw new Error('家宽或高速订阅没有可用节点，请检查两个订阅');
 const select = (name, members) => ({ name, type: 'select', proxies: members });
 const groups = [
-  select('🚀 手动节点', proxies.map(proxy => proxy.name)),
-  select('🛰️ 中转节点', relay),
+  select('🚀 节点选择', proxies.map(proxy => proxy.name)),
+  select('🏠 家宽节点', residential),
   select('⚡ 高速节点', high),
-  // 默认跟随常规节点；也可直接选择一个节点，仅供 AI 平台使用。
-  select('🤖 AI 平台', ['🚀 手动节点', ...proxies.map(proxy => proxy.name)]),
+  // AI 默认使用家宽组；也可固定到单个节点。
+  select('🤖 AI 平台', ['🏠 家宽节点', '🚀 节点选择', ...proxies.map(proxy => proxy.name)]),
   ...(infoProxies.length ? [select('ℹ️ 订阅信息', ['DIRECT', ...infoProxies.map(proxy => proxy.name)])] : []),
 ];
 // 应用策略组从 INI 读取，保留默认顺序及校园/音乐专用节点匹配。

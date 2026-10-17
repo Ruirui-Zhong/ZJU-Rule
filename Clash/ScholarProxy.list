@@ -1,0 +1,26 @@
+# 谷歌学术主站、地区入口和专用资源。优先于通用 Google/GFW 规则。
+# 使用独立学术搜索策略，默认家宽，不依赖“节点选择”的当前选择。
+DOMAIN-SUFFIX,scholar.google.com
+DOMAIN-SUFFIX,scholar.google.com.hk
+DOMAIN-SUFFIX,scholar.google.com.cn
+DOMAIN-SUFFIX,scholar.google.com.tw
+DOMAIN-SUFFIX,scholar.google.com.sg
+DOMAIN-SUFFIX,scholar.google.com.au
+DOMAIN-SUFFIX,scholar.google.co.uk
+DOMAIN-SUFFIX,scholar.google.co.jp
+DOMAIN-SUFFIX,scholar.google.co.in
+DOMAIN-SUFFIX,scholar.google.co.kr
+DOMAIN-SUFFIX,scholar.google.de
+DOMAIN-SUFFIX,scholar.google.fr
+DOMAIN-SUFFIX,scholar.google.ca
+DOMAIN-SUFFIX,scholar.googleusercontent.com
+
+# Google 登录、跳转和 reCAPTCHA 共享依赖；这些精确主机也会影响其他 Google 网页。
+# 同一主机无法按来源网页分别路由；不接管全部 google.com/googleusercontent.com/gstatic.com。
+DOMAIN,accounts.google.com
+DOMAIN,consent.google.com
+DOMAIN,www.google.com
+DOMAIN,recaptcha.google.com
+DOMAIN,www.gstatic.com
+DOMAIN,ssl.gstatic.com
+DOMAIN-SUFFIX,recaptcha.net
