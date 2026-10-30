@@ -67,7 +67,8 @@ class ScholarRules(unittest.TestCase):
         self.assertEqual(self.groups[SEARCH][0], '[]🚀 手动选择')
         self.assertIn('[]♻️ 自动选择', self.groups[SEARCH])
         for name in ['🏠 家宽节点']:
-            self.assertTrue(all(not x.startswith('[]') for x in self.groups[name]))
+            self.assertEqual(self.groups[name][0], '[]🏠 自动家宽')
+            self.assertTrue(all(not x.startswith('[]') for x in self.groups[name][1:]))
         self.assertEqual(self.groups[ACADEMIC][0], '[]DIRECT')
 
     def test_shared_challenge_and_researchgate_preserved(self):
