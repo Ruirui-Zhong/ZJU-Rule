@@ -1,7 +1,7 @@
 // Sub-Store 普通文件：远程 ZJU.ini -> 脚本操作。
 // 手动选择保留全部实际节点；自动选择仅使用美国 US 节点。
 const collectionName = 'Plinx';
-const sourceCategory = { 'Plinx-home': 'residential', 'Plinx-high': 'high', 'Plinx-Extra': 'other' };
+const sourceCategory = { 'Plinx-home': 'residential', 'Plinx-high': 'high', 'Plinx-Extra': 'high' };
 const ownRoot = 'https://raw.githubusercontent.com/Ruirui-Zhong/ZJU-Rule/main/';
 const ini = $content ?? $files?.[0];
 if (typeof ini !== 'string' || !ini.includes('[custom]')) {
@@ -18,7 +18,7 @@ for (const raw of ini.replace(/^\uFEFF/, '').split(/\r?\n/)) {
   if (at < 0) throw new Error('INI 存在无法解析的行');
   entries.push([line.slice(0, at).trim(), line.slice(at + 1).trim()]);
 }
-const expectedGroups = ['🚀 手动选择', '🏠 家宽节点', '⚡ 高速节点', '🤖 AI 平台', 'ℹ️ 订阅信息', '♻️ 自动选择'];
+const expectedGroups = ['🚀 手动选择', '🏠 家宽节点', '🤖 AI 平台', 'ℹ️ 订阅信息', '♻️ 自动选择'];
 const definitions = entries.filter(([key]) => key === 'custom_proxy_group').map(([, value]) => value.split('`'));
 const definedNames = new Set(definitions.map(parts => parts[0]));
 if (definedNames.size !== definitions.length || expectedGroups.some(name => !definedNames.has(name)) ||
@@ -62,12 +62,11 @@ const usNodes = proxies.filter(proxy => /^(?:US(?=\[|[-_\s\d])|美国|美國|�
 if (!usNodes.length) throw new Error('过滤后没有可用的美国 US 节点，无法生成美国自动选择组');
 const groups = [
   ...(infoProxies.length ? [select('ℹ️ 订阅信息', ['DIRECT', ...infoProxies.map(proxy => proxy.name)])] : []),
-  select('🚀 手动选择', ['♻️ 自动选择', '⚡ 高速节点', ...proxies.map(proxy => proxy.name)]),
+  select('🚀 手动选择', ['♻️ 自动选择', ...proxies.map(proxy => proxy.name)]),
   select('🏠 家宽节点', residential),
-  select('⚡ 高速节点', high),
   auto('♻️ 自动选择', usNodes),
   // AI 默认使用家宽组；也可固定到单个节点。
-  select('🤖 AI 平台', ['🏠 家宽节点', '♻️ 自动选择', '⚡ 高速节点', ...proxies.map(proxy => proxy.name)]),
+  select('🤖 AI 平台', ['🏠 家宽节点', '♻️ 自动选择', ...proxies.map(proxy => proxy.name)]),
 ];
 // 校园、通用服务及学术/验证组从 INI 读取，保留独立出口切换。
 for (const [name, , ...selectors] of definitions) {

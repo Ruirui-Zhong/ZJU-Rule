@@ -63,10 +63,10 @@ class ScholarRules(unittest.TestCase):
             with self.subTest(host=host):
                 self.assertEqual(self.first_policy(host), ACADEMIC)
 
-    def test_search_does_not_depend_on_general_selection(self):
-        self.assertEqual(self.groups[SEARCH][0], '[]⚡ 高速节点')
-        self.assertNotIn('[]🚀 手动选择', self.groups[SEARCH])
-        for name in ['🏠 家宽节点', '⚡ 高速节点']:
+    def test_proxy_search_follows_manual_selection(self):
+        self.assertEqual(self.groups[SEARCH][0], '[]🚀 手动选择')
+        self.assertIn('[]♻️ 自动选择', self.groups[SEARCH])
+        for name in ['🏠 家宽节点']:
             self.assertTrue(all(not x.startswith('[]') for x in self.groups[name]))
         self.assertEqual(self.groups[ACADEMIC][0], '[]DIRECT')
 
@@ -87,8 +87,9 @@ class ScholarRules(unittest.TestCase):
     def test_compact_groups_and_application_routes(self):
         expected = json.loads((ROOT / 'tests/fixtures/group_order.json').read_text())
         self.assertEqual(list(self.groups), expected)
-        self.assertEqual(self.groups['🚀 手动选择'][:2], ['[]♻️ 自动选择', '[]⚡ 高速节点'])
-        self.assertTrue(all(not x.startswith('[]') for x in self.groups['🚀 手动选择'][2:]))
+        self.assertEqual(self.groups['🚀 手动选择'][0], '[]♻️ 自动选择')
+        self.assertNotIn('⚡ 高速节点', self.groups)
+        self.assertTrue(all(not x.startswith('[]') for x in self.groups['🚀 手动选择'][1:]))
         self.assertEqual(self.groups['✔ ZJU内网'][0], '[]DIRECT')
         self.assertIn('[]🚀 手动选择', self.groups['✔ ZJU内网'])
         self.assertEqual(self.groups['🌐 通用服务'][0], '[]DIRECT')
@@ -122,8 +123,8 @@ class ScholarRules(unittest.TestCase):
                 policy, source = line[8:].split(',', 1)
                 actual.append({'source': source, 'default': resolve(policy)})
         self.assertEqual(actual, baseline)
-        self.assertEqual(self.groups['🐟 漏网之鱼'][0], '[]⚡ 高速节点')
-        self.assertEqual(self.groups['🌍 国外媒体'][0], '[]⚡ 高速节点')
+        self.assertEqual(self.groups['🐟 漏网之鱼'][0], '[]🚀 手动选择')
+        self.assertEqual(self.groups['🌍 国外媒体'][0], '[]🚀 手动选择')
         self.assertEqual(self.groups['🌏 国内媒体'][0], '[]DIRECT')
         self.assertEqual(self.groups['🛑 广告拦截'][0], '[]REJECT')
         self.assertEqual(self.groups['🛡️ 隐私防护'][0], '[]REJECT')

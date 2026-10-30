@@ -28,10 +28,12 @@ for(const file of ['zju-sub-store.js','zju-sub-store-surge.js']){
    assert.equal(g('♻️ 自动选择').type,'url-test');assert.equal(g('♻️ 自动选择').interval,300);assert.equal(g('♻️ 自动选择').tolerance,100);assert.equal(g('♻️ 自动选择').lazy,false);
    assert.equal(groups.filter(x=>x.type==='url-test').length,1);
    assert.deepEqual(g('🏠 家宽节点').proxies,['家宽测试']);
-   assert.deepEqual(g('⚡ 高速节点').proxies,['US[02]-测试','JP[03]-测试']);
+   assert.equal(g('⚡ 高速节点'),undefined);
+   for(const n of ['US[02]-测试','US[04]-测试','JP[03]-测试'])assert(g('🚀 手动选择').proxies.includes(n));
    assert.equal(g('🚀 手动选择').proxies[0],'♻️ 自动选择');
    assert(g('🚀 手动选择').proxies.includes('家宽测试')&&g('🚀 手动选择').proxies.includes('JP[03]-测试'));
    assert.equal(g('🤖 AI 平台').proxies[0],'🏠 家宽节点');assert(g('🤖 AI 平台').proxies.includes('♻️ 自动选择'));
+   for(const n of ['🔎 学术搜索','🌍 国外媒体','🐟 漏网之鱼'])assert.equal(g(n).proxies[0],'🚀 手动选择');
    assert.equal(g('📚 学术资源').proxies[0],'DIRECT');assert.equal(g('🛑 广告拦截').proxies[0],'REJECT');
    const names=new Set(['DIRECT','REJECT',...groups.map(x=>x.name),...c.proxies.map(x=>x.name)]);
    for(const group of groups)for(const member of group.proxies)assert(names.has(member));
@@ -42,6 +44,9 @@ for(const file of ['zju-sub-store.js','zju-sub-store-surge.js']){
    assert(groups.includes('♻️ 自动选择 = url-test, US[02]-测试, US[04]-测试, interval=300, tolerance=100'));
    assert.equal(groups.filter(x=>x.includes(' = url-test,')).length,1);
    assert(groups.includes('🏠 家宽节点 = select, 家宽测试'));
+   assert(!groups.some(l=>l.startsWith('⚡ 高速节点 =')));
+   assert(groups.some(l=>l.startsWith('🚀 手动选择 = select,')&&l.includes('US[04]-测试')));
+   for(const n of ['🔎 学术搜索','🌍 国外媒体','🐟 漏网之鱼'])assert(groups.some(l=>l.startsWith(n+' = select, 🚀 手动选择,')));
    assert(out.includes('proxy-test-url = http://www.gstatic.com/generate_204'));
    assert(out.includes('FINAL,🐟 漏网之鱼'));
   }
