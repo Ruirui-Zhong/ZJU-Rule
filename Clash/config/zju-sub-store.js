@@ -1,5 +1,5 @@
 // Sub-Store 普通文件：远程 ZJU.ini -> 脚本操作。
-// 手动选节点；不生成自动测速、故障转移或地区组。
+// 手动选择保留全部实际节点；自动选择仅使用美国 US 节点。
 const collectionName = 'Plinx';
 const sourceCategory = { 'Plinx-home': 'residential', 'Plinx-high': 'high' };
 const ownRoot = 'https://raw.githubusercontent.com/Ruirui-Zhong/ZJU-Rule/main/';
@@ -18,11 +18,11 @@ for (const raw of ini.replace(/^\uFEFF/, '').split(/\r?\n/)) {
   if (at < 0) throw new Error('INI 存在无法解析的行');
   entries.push([line.slice(0, at).trim(), line.slice(at + 1).trim()]);
 }
-const expectedGroups = ['🚀 节点选择', '🏠 家宽节点', '⚡ 高速节点', '🤖 AI 平台', 'ℹ️ 订阅信息'];
+const expectedGroups = ['🚀 手动选择', '🏠 家宽节点', '⚡ 高速节点', '🤖 AI 平台', 'ℹ️ 订阅信息', '♻️ 自动选择'];
 const definitions = entries.filter(([key]) => key === 'custom_proxy_group').map(([, value]) => value.split('`'));
 const definedNames = new Set(definitions.map(parts => parts[0]));
 if (definedNames.size !== definitions.length || expectedGroups.some(name => !definedNames.has(name)) ||
-    definitions.some(([, type]) => type !== 'select')) {
+    definitions.some(([name, type]) => type !== (['♻️ 自动选择'].includes(name) ? 'url-test' : 'select'))) {
   throw new Error('INI 需要完整的节点分类组，且策略组名称不可重复。');
 }
 const sourceProxies = await produceArtifact({
@@ -32,7 +32,7 @@ if (!Array.isArray(sourceProxies) || !sourceProxies.length) {
   throw new Error(`${collectionName} 没有可输出的节点，请检查组合订阅。`);
 }
 const notice = /通知|公告|剩余|重置|到期|流量|套餐|更新订阅|无节点可用/;
-const proxies = sourceProxies.filter(proxy => !notice.test(proxy.name ?? '')).map(proxy => ({ ...proxy }));
+const proxies = sourceProxies.filter(proxy => !notice.test(proxy.name ?? '') && String(proxy.type ?? '').toLowerCase() !== 'vless').map(proxy => ({ ...proxy }));
 const infoProxies = sourceProxies.filter(proxy => notice.test(proxy.name ?? ''))
   .map(proxy => ({ ...proxy, name: `[${proxy._subName ?? '未知订阅'}] ${proxy.name}` }));
 const outputProxies = [...proxies, ...infoProxies];
@@ -53,13 +53,21 @@ for (const proxy of proxies) {
 }
 if (!residential.length || !high.length) throw new Error('家宽或高速订阅没有可用节点，请检查两个订阅');
 const select = (name, members) => ({ name, type: 'select', proxies: members });
+const auto = (name, members) => ({
+  name, type: 'url-test', proxies: members,
+  url: 'http://www.gstatic.com/generate_204', interval: 300, tolerance: 100, lazy: false,
+});
+// 自动组只使用美国节点；其他地区仍可手动选择。
+const usNodes = proxies.filter(proxy => /^(?:US(?=\[|[-_\s\d])|美国|美國|🇺🇸|🇺🇲)/i.test(proxy.name)).map(proxy => proxy.name);
+if (!usNodes.length) throw new Error('过滤后没有可用的美国 US 节点，无法生成美国自动选择组');
 const groups = [
   ...(infoProxies.length ? [select('ℹ️ 订阅信息', ['DIRECT', ...infoProxies.map(proxy => proxy.name)])] : []),
-  select('🚀 节点选择', ['⚡ 高速节点', ...proxies.map(proxy => proxy.name)]),
+  select('🚀 手动选择', ['♻️ 自动选择', '⚡ 高速节点', ...proxies.map(proxy => proxy.name)]),
   select('🏠 家宽节点', residential),
   select('⚡ 高速节点', high),
+  auto('♻️ 自动选择', usNodes),
   // AI 默认使用家宽组；也可固定到单个节点。
-  select('🤖 AI 平台', ['🏠 家宽节点', '⚡ 高速节点', ...proxies.map(proxy => proxy.name)]),
+  select('🤖 AI 平台', ['🏠 家宽节点', '♻️ 自动选择', '⚡ 高速节点', ...proxies.map(proxy => proxy.name)]),
 ];
 // 校园、通用服务及学术/验证组从 INI 读取，保留独立出口切换。
 for (const [name, , ...selectors] of definitions) {

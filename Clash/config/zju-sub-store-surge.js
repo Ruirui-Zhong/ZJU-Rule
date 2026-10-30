@@ -1,6 +1,6 @@
 // Sub-Store 普通文件：远程 ZJU.ini -> Surge 脚本操作。
 // 当前 Plinx 的 Surge 输出只保留 Hysteria2（iOS 5.8+ / Mac 5.4+）；VLESS 不输出。
-// 手动选节点；不生成自动测速、故障转移或地区组。
+// 手动选择保留全部实际节点；自动选择仅使用美国 US 节点。
 const collectionName = 'Plinx';
 const sourceCategory = { 'Plinx-home': 'residential', 'Plinx-high': 'high' };
 const ownRoot = 'https://raw.githubusercontent.com/Ruirui-Zhong/ZJU-Rule/main/';
@@ -19,11 +19,11 @@ for (const raw of ini.replace(/^\uFEFF/, '').split(/\r?\n/)) {
   if (at < 0) throw new Error('INI 存在无法解析的行');
   entries.push([line.slice(0, at).trim(), line.slice(at + 1).trim()]);
 }
-const expectedGroups = ['🚀 节点选择', '🏠 家宽节点', '⚡ 高速节点', '🤖 AI 平台', 'ℹ️ 订阅信息'];
+const expectedGroups = ['🚀 手动选择', '🏠 家宽节点', '⚡ 高速节点', '🤖 AI 平台', 'ℹ️ 订阅信息', '♻️ 自动选择'];
 const definitions = entries.filter(([key]) => key === 'custom_proxy_group').map(([, value]) => value.split('`'));
 const definedNames = new Set(definitions.map(parts => parts[0]));
 if (definedNames.size !== definitions.length || expectedGroups.some(name => !definedNames.has(name)) ||
-    definitions.some(([, type]) => type !== 'select')) {
+    definitions.some(([name, type]) => type !== (['♻️ 自动选择'].includes(name) ? 'url-test' : 'select'))) {
   throw new Error('INI 需要完整的节点分类组，且策略组名称不可重复。');
 }
 const sourceProxies = await produceArtifact({
@@ -57,13 +57,21 @@ for (const proxy of proxies) {
 }
 if (!residential.length || !high.length) throw new Error('家宽或高速订阅没有 Surge 可用的 Hysteria2 节点');
 const select = (name, members) => ({ name, type: 'select', proxies: members });
+const auto = (name, members) => ({
+  name, type: 'url-test', proxies: members,
+  url: 'http://www.gstatic.com/generate_204', interval: 300, tolerance: 100, lazy: false,
+});
+// 自动组只使用美国节点；其他地区仍可手动选择。
+const usNodes = proxies.filter(proxy => /^(?:US(?=\[|[-_\s\d])|美国|美國|🇺🇸|🇺🇲)/i.test(proxy.name)).map(proxy => proxy.name);
+if (!usNodes.length) throw new Error('过滤后没有可用的美国 US 节点，无法生成美国自动选择组');
 const groups = [
   ...(infoProxies.length ? [select('ℹ️ 订阅信息', ['DIRECT', ...infoProxies.map(proxy => proxy.name)])] : []),
-  select('🚀 节点选择', ['⚡ 高速节点', ...proxies.map(proxy => proxy.name)]),
+  select('🚀 手动选择', ['♻️ 自动选择', '⚡ 高速节点', ...proxies.map(proxy => proxy.name)]),
   select('🏠 家宽节点', residential),
   select('⚡ 高速节点', high),
+  auto('♻️ 自动选择', usNodes),
   // AI 默认使用家宽组；也可固定到单个节点。
-  select('🤖 AI 平台', ['🏠 家宽节点', '⚡ 高速节点', ...proxies.map(proxy => proxy.name)]),
+  select('🤖 AI 平台', ['🏠 家宽节点', '♻️ 自动选择', '⚡ 高速节点', ...proxies.map(proxy => proxy.name)]),
 ];
 // 校园、通用服务及学术/验证组从 INI 读取，保留独立出口切换。
 for (const [name, , ...selectors] of definitions) {
@@ -135,7 +143,9 @@ if (!Array.isArray(proxyLines) || proxyLines.length !== proxies.length) {
 const convertedNames = new Set(proxyLines.map(line => line.slice(0, line.indexOf('=')).trim()));
 if (proxies.some(proxy => !convertedNames.has(proxy.name))) throw new Error('Surge 转换后的节点名称不一致');
 const infoLines = infoProxies.map(proxy => `${proxy.name} = direct`);
-const groupLines = groups.map(group => `${group.name} = select, ${group.proxies.join(', ')}`);
+const groupLines = groups.map(group => group.type === 'url-test'
+  ? `${group.name} = url-test, ${group.proxies.join(', ')}, interval=300, tolerance=100`
+  : `${group.name} = select, ${group.proxies.join(', ')}`);
 const ruleLines = rules.map(rule => {
   if (rule.startsWith('RULE-SET,')) {
     const [, name, policy] = rule.split(',');
@@ -145,7 +155,8 @@ const ruleLines = rules.map(rule => {
 });
 $content = [
   '# ZJU Rule — Surge（Hysteria2 节点；iOS 5.8+ / Mac 5.4+）',
-  '[General]', 'loglevel = notify', '',
+  '[General]', 'loglevel = notify',
+  'proxy-test-url = http://www.gstatic.com/generate_204', 'test-timeout = 5', '',
   '[Proxy]', ...proxyLines, ...infoLines, '',
   '[Proxy Group]', ...groupLines, '',
   '[Rule]', ...ruleLines, '',
