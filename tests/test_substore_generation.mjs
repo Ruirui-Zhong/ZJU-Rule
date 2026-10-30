@@ -9,7 +9,7 @@ const AsyncFunction=Object.getPrototypeOf(async function(){}).constructor;
 const fixture=[
  {name:'家宽测试',type:'hysteria2',_subName:'Plinx-home'},
  {name:'US[02]-测试',type:'hysteria2',_subName:'Plinx-high'},
- {name:'US[04]-测试',type:'hysteria2',_subName:'Plinx-high'},
+ {name:'US[04]-测试',type:'hysteria2',_subName:'Plinx-Extra'},
  {name:'JP[03]-测试',type:'hysteria2',_subName:'Plinx-high'},
  {name:'US[07]-VLESS过滤测试',type:'vless',_subName:'Plinx-high'},
  {name:'剩余流量',type:'vless',_subName:'Plinx-home'},
@@ -28,7 +28,7 @@ for(const file of ['zju-sub-store.js','zju-sub-store-surge.js']){
    assert.equal(g('♻️ 自动选择').type,'url-test');assert.equal(g('♻️ 自动选择').interval,300);assert.equal(g('♻️ 自动选择').tolerance,100);assert.equal(g('♻️ 自动选择').lazy,false);
    assert.equal(groups.filter(x=>x.type==='url-test').length,1);
    assert.deepEqual(g('🏠 家宽节点').proxies,['家宽测试']);
-   assert.deepEqual(g('⚡ 高速节点').proxies,['US[02]-测试','US[04]-测试','JP[03]-测试']);
+   assert.deepEqual(g('⚡ 高速节点').proxies,['US[02]-测试','JP[03]-测试']);
    assert.equal(g('🚀 手动选择').proxies[0],'♻️ 自动选择');
    assert(g('🚀 手动选择').proxies.includes('家宽测试')&&g('🚀 手动选择').proxies.includes('JP[03]-测试'));
    assert.equal(g('🤖 AI 平台').proxies[0],'🏠 家宽节点');assert(g('🤖 AI 平台').proxies.includes('♻️ 自动选择'));

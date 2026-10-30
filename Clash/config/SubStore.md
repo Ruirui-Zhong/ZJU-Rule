@@ -99,3 +99,5 @@ Mihomo YAML 不能作为完整 Surge 配置导入。单独新建文件 `ZJU-Plin
 - `tests/fixtures/routing_defaults.json` 固化合并前全部规则来源、顺序及默认方向，确保合并不会将原代理规则改为直连或丢失校园出口切换。
 
 美国自动组展示在 AI 平台前。Clash/Mihomo 使用 url-test（lazy=false）；Surge 使用 url-test 和全局 proxy-test-url。过滤 VLESS 实际节点，保留套餐信息。客户端可能记住上次选择；需在“手动选择”中选“自动选择”才能自动切换。AI 要使用美国自动组时也需单独选择；固定实际节点不会自动替换。
+
+`Plinx-Extra` 默认登记为 `other`：纳入全部手动节点，名称符合美国规则时参与美国自动组；不默认归入家宽或高速。可在脚本顶部修改分类。

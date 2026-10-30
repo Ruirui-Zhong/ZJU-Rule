@@ -2,7 +2,7 @@
 // 当前 Plinx 的 Surge 输出只保留 Hysteria2（iOS 5.8+ / Mac 5.4+）；VLESS 不输出。
 // 手动选择保留全部实际节点；自动选择仅使用美国 US 节点。
 const collectionName = 'Plinx';
-const sourceCategory = { 'Plinx-home': 'residential', 'Plinx-high': 'high' };
+const sourceCategory = { 'Plinx-home': 'residential', 'Plinx-high': 'high', 'Plinx-Extra': 'other' };
 const ownRoot = 'https://raw.githubusercontent.com/Ruirui-Zhong/ZJU-Rule/main/';
 const ini = $content ?? $files?.[0];
 if (typeof ini !== 'string' || !ini.includes('[custom]')) {
@@ -53,7 +53,7 @@ for (const proxy of proxies) {
   const category = sourceCategory[proxy._subName];
   if (category === 'residential') residential.push(proxy.name);
   else if (category === 'high') high.push(proxy.name);
-  else throw new Error('发现未知订阅来源，请在 sourceCategory 中登记为 residential 或 high');
+  else if (category !== 'other') throw new Error(`发现未知订阅来源 ${proxy._subName}，请在 sourceCategory 中登记为 residential、high 或 other`);
 }
 if (!residential.length || !high.length) throw new Error('家宽或高速订阅没有 Surge 可用的 Hysteria2 节点');
 const select = (name, members) => ({ name, type: 'select', proxies: members });
