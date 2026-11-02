@@ -1,0 +1,2 @@
+# arXiv 主站及子域名；由 INI 映射到 arXiv 策略组。
+DOMAIN-SUFFIX,arxiv.org

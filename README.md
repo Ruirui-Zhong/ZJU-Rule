@@ -34,3 +34,5 @@
 - `ScholarProxy.list` 将谷歌学术及相关验证依赖交给独立的“学术搜索”（默认手动选择）；`AcademicSupplement.list` 补齐常用学术站点。回归检查：`python3 -m unittest discover -s tests -v`。
 
 - Clash 保留 VLESS；新增自动家宽，AI 默认家宽自动；Extra 独立分组，不混入手动/自动选择。
+
+- [高速地区与 arXiv 分流](Clash/config/Regions-Arxiv.md)：香港/日本/美国等地区只收录高速来源，arXiv 默认香港，个人节点偏好独立保存。

@@ -32,3 +32,6 @@ build/
 
 ### VS Studio ###
 .vs/
+
+# Personal node priorities are local only.
+/Clash/config/node-preferences.local.json

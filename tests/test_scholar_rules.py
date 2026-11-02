@@ -90,7 +90,8 @@ class ScholarRules(unittest.TestCase):
         self.assertEqual(list(self.groups), expected)
         self.assertEqual(self.groups['🚀 手动选择'][0], '[]♻️ 自动选择')
         self.assertNotIn('⚡ 高速节点', self.groups)
-        self.assertTrue(all(not x.startswith('[]') for x in self.groups['🚀 手动选择'][1:]))
+        self.assertIn('[]🇭🇰 香港节点', self.groups['🚀 手动选择'])
+        self.assertEqual(self.groups['📄 arXiv'][0], '[]🇭🇰 香港节点')
         self.assertEqual(self.groups['✔ ZJU内网'][0], '[]DIRECT')
         self.assertIn('[]🚀 手动选择', self.groups['✔ ZJU内网'])
         self.assertEqual(self.groups['🌐 通用服务'][0], '[]DIRECT')
@@ -133,8 +134,19 @@ class ScholarRules(unittest.TestCase):
         self.assertEqual(self.first_policy('mail.google.com'), '🚀 手动选择')
         self.assertEqual(self.first_policy('login.microsoftonline.com'), '🌐 通用服务')
 
+    def test_arxiv_priority_and_domain_boundaries(self):
+        for host in ['arxiv.org', 'export.arxiv.org', 'www.arxiv.org', 'browse.arxiv.org']:
+            self.assertEqual(self.first_policy(host), '📄 arXiv')
+        for host in ['notarxiv.org', 'arxiv.org.example.com']:
+            self.assertNotEqual(self.first_policy(host), '📄 arXiv')
+        self.assertEqual(self.groups['📄 arXiv'][0], '[]🇭🇰 香港节点')
+        self.assertIn('[]DIRECT', self.groups['📄 arXiv'])
+        for policy, _, rules in self.sources:
+            if policy == ACADEMIC:
+                self.assertNotIn('DOMAIN-SUFFIX,arxiv.org', rules)
+
     def test_new_provider_mirrors_and_sources_exist(self):
-        for name in ['ScholarProxy', 'AcademicSupplement', 'AcademicPublishers']:
+        for name in ['ScholarProxy', 'AcademicSupplement', 'AcademicPublishers', 'Arxiv']:
             expected = [x for x in (ROOT / f'Clash/{name}.list').read_text().splitlines()
                         if x.strip() and not x.startswith('#')]
             actual = [x.strip()[2:] for x in (ROOT / f'Clash/Providers/{name}.yaml').read_text().splitlines()

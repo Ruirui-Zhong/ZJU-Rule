@@ -23,7 +23,7 @@ for(const file of ['zju-sub-store.js','zju-sub-store-surge.js']){
  for(const withInfo of [true,false])for(const withExtra of [true,false]){
   const nodes=fixture.filter(x=>(withInfo||x.name!=='剩余流量')&&(withExtra||x._subName!=='Plinx-Extra'));
   const out=await fn(ini,[],async()=>structuredClone(nodes),utils);
-  const namesExpected=expected.filter(x=>(withInfo||x!=='ℹ️ 订阅信息')&&(withExtra||x!=='🧩 Extra 节点'));
+  const namesExpected=expected.filter(x=>(withInfo||x!=='ℹ️ 订阅信息')&&(withExtra||x!=='🧩 Extra 节点')&&!['🇭🇰 香港节点','🇹🇼 台湾节点','🇸🇬 新加坡节点','🇰🇷 韩国节点','🇩🇪 德国节点','🇬🇧 英国节点','🌐 其他高速节点'].includes(x));
   let groups;
   if(!surge){
    const c=JSON.parse(out);groups=c['proxy-groups'];
@@ -58,7 +58,9 @@ for(const file of ['zju-sub-store.js','zju-sub-store-surge.js']){
   for(const name of ['🔎 学术搜索','🌍 国外媒体','🐟 漏网之鱼'])assert.equal(g(name).proxies[0],'🚀 手动选择');
   assert.equal(g('📚 学术资源').proxies[0],'DIRECT');assert.equal(g('🛑 广告拦截').proxies[0],'REJECT');
  }
- // Extra US nodes must not silently become candidates if regular US nodes are absent.
- await assert.rejects(()=>fn(ini,[],async()=>structuredClone(fixture.filter(x=>x._subName==='Plinx-Extra'||!x.name.startsWith('US'))),utils),/没有可用的美国 US 节点/);
+ // Missing US stays fail-closed instead of silently using Extra or another region.
+ const withoutUS=await fn(ini,[],async()=>structuredClone(fixture.filter(x=>x._subName==='Plinx-Extra'||!x.name.startsWith('US'))),utils);
+ if(!surge){const c=JSON.parse(withoutUS);assert.deepEqual(c['proxy-groups'].find(x=>x.name==='♻️ 自动选择').proxies,['REJECT']);}
+ else assert(withoutUS.includes('♻️ 自动选择 = select, REJECT'));
  console.log(file+': VLESS compatibility, US/home auto, isolated Extra, optional groups, defaults passed');
 }

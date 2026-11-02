@@ -1,6 +1,5 @@
 # 常用预印本、文献索引、研究者认证与开放数据平台。
 # 显式归入学术资源，不再由 IP/FINAL 随当前兜底策略变化。
-DOMAIN-SUFFIX,arxiv.org
 DOMAIN-SUFFIX,biorxiv.org
 DOMAIN-SUFFIX,medrxiv.org
 DOMAIN-SUFFIX,pubmed.gov

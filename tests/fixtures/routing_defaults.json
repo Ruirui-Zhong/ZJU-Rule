@@ -16,6 +16,10 @@
     "default": "DIRECT"
   },
   {
+    "source": "https://raw.githubusercontent.com/Ruirui-Zhong/ZJU-Rule/main/Clash/Arxiv.list",
+    "default": "PROXY"
+  },
+  {
     "source": "https://raw.githubusercontent.com/Ruirui-Zhong/ZJU-Rule/main/Clash/ResearchDirect.list",
     "default": "DIRECT"
   },

@@ -1,0 +1,3 @@
+payload:
+  # arXiv 主站及子域名
+  - DOMAIN-SUFFIX,arxiv.org
