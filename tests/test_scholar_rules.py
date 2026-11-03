@@ -88,6 +88,7 @@ class ScholarRules(unittest.TestCase):
     def test_compact_groups_and_application_routes(self):
         expected = json.loads((ROOT / 'tests/fixtures/group_order.json').read_text())
         self.assertEqual(list(self.groups), expected)
+        self.assertEqual(list(self.groups).index('📄 arXiv'), list(self.groups).index('📚 学术资源') + 1)
         self.assertEqual(self.groups['🚀 手动选择'][0], '[]♻️ 自动选择')
         self.assertNotIn('⚡ 高速节点', self.groups)
         self.assertIn('[]🇭🇰 香港节点', self.groups['🚀 手动选择'])
