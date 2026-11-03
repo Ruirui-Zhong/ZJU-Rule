@@ -40,27 +40,30 @@ for(const file of ['zju-sub-store.js','zju-sub-store-surge.js']){
   }
   assert.deepEqual(groups.map(x=>x.name),namesExpected);
   const g=name=>groups.find(x=>x.name===name);
-  assert.deepEqual(g('♻️ 自动选择').proxies,surge?['US[02]-测试']:['US[02]-测试','US[07]-VLESS测试']);
-  assert.deepEqual(g('🏠 自动家宽').proxies,surge?['家宽测试']:['家宽测试','家宽VLESS测试']);
-  assert.equal(groups.filter(x=>x.type==='url-test').length,2);
-  for(const name of ['♻️ 自动选择','🏠 自动家宽']){
-   assert.equal(g(name).type,'url-test');
-   if(!surge){assert.equal(g(name).interval,300);assert.equal(g(name).tolerance,100);assert.equal(g(name).lazy,false);}
+  assert.deepEqual(g('♻️ 美国自动').proxies,surge?['US[02]-测试']:['US[02]-测试','US[07]-VLESS测试']);
+  assert.deepEqual(g('🏠 家宽稳定').proxies,surge?['家宽测试']:['家宽测试','家宽VLESS测试']);
+  assert.equal(groups.filter(x=>x.type==='url-test').length,1);
+  assert.equal(groups.filter(x=>x.type==='fallback').length,1);
+  for(const name of ['♻️ 美国自动','🏠 家宽稳定']){
+   assert.equal(g(name).type,name==='♻️ 美国自动'?'url-test':'fallback');
+   if(!surge){assert.equal(g(name).interval,300);assert.equal(g(name).lazy,false);}
   }
-  assert.equal(g('🏠 家宽节点').proxies[0],'🏠 自动家宽');
-  assert.equal(g('🤖 AI 平台').proxies[0],'🏠 家宽节点');
-  assert.equal(g('🚀 手动选择').proxies[0],'♻️ 自动选择');
+  assert.equal(g('🏠 家宽节点').proxies[0],'🏠 家宽稳定');
+  assert.equal(g('🤖 AI 平台').proxies[0],'🏠 家宽稳定');
+  assert.equal(g('🚀 默认代理').proxies[0],'♻️ 美国自动');
+  assert(g('🚀 手动选择').proxies.every(n=>!groups.some(x=>x.name===n)));
+  for(const name of ['🤖 AI 平台','🔎 学术搜索','🌍 国外媒体','🐟 漏网之鱼'])assert(g(name).proxies.every(n=>['DIRECT','REJECT'].includes(n)||groups.some(x=>x.name===n)));
   assert(!g('🚀 手动选择').proxies.some(x=>x.includes('Extra')));
-  assert(!g('♻️ 自动选择').proxies.some(x=>x.includes('Extra')));
-  assert(!g('🏠 自动家宽').proxies.some(x=>x.includes('Extra')));
+  assert(!g('♻️ 美国自动').proxies.some(x=>x.includes('Extra')));
+  assert(!g('🏠 家宽稳定').proxies.some(x=>x.includes('Extra')));
   assert.equal(g('⚡ 高速节点'),undefined);
   if(withExtra){assert.deepEqual(g('🧩 Extra 节点').proxies,surge?['US[04]-Extra测试']:['US[04]-Extra测试','US[08]-ExtraVLESS']);assert(g('🤖 AI 平台').proxies.includes('🧩 Extra 节点'));}
-  for(const name of ['🔎 学术搜索','🌍 国外媒体','🐟 漏网之鱼'])assert.equal(g(name).proxies[0],'🚀 手动选择');
+  for(const name of ['🔎 学术搜索','🌍 国外媒体','🐟 漏网之鱼'])assert.equal(g(name).proxies[0],'🚀 默认代理');
   assert.equal(g('📚 学术资源').proxies[0],'DIRECT');assert.equal(g('🛑 广告拦截').proxies[0],'REJECT');
  }
  // Missing US stays fail-closed instead of silently using Extra or another region.
  const withoutUS=await fn(ini,[],async()=>structuredClone(fixture.filter(x=>x._subName==='Plinx-Extra'||!x.name.startsWith('US'))),utils);
- if(!surge){const c=JSON.parse(withoutUS);assert.deepEqual(c['proxy-groups'].find(x=>x.name==='♻️ 自动选择').proxies,['REJECT']);}
- else assert(withoutUS.includes('♻️ 自动选择 = select, REJECT'));
+ if(!surge){const c=JSON.parse(withoutUS);assert.deepEqual(c['proxy-groups'].find(x=>x.name==='♻️ 美国自动').proxies,['REJECT']);}
+ else assert(withoutUS.includes('♻️ 美国自动 = select, REJECT'));
  console.log(file+': VLESS compatibility, US/home auto, isolated Extra, optional groups, defaults passed');
 }

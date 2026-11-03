@@ -48,10 +48,10 @@ for(const file of ['zju-sub-store.js','zju-sub-store-surge.js']){
  assert(!members.some(n=>/家宽|Extra|流量/.test(n)));
  assert.deepEqual(g.get('🌐 其他高速节点').proxies,['自动线路A','USABILITY-线路']);
  assert(!g.get('🇺🇸 美国节点').proxies.includes('US[88]-显式元数据'));
- for(const name of regions){assert(g.has(name));assert.equal(g.get(name).type,'select');assert(g.get('🚀 手动选择').proxies.includes(name));}
+ for(const name of regions){assert(g.has(name));assert.equal(g.get(name).type,'select');assert(g.get('🚀 默认代理').proxies.includes(name));}
  assert(g.get('📄 arXiv').proxies.includes('DIRECT'));
- assert.equal(g.get('♻️ 自动选择').type,'url-test');
- assert.equal(g.get('🤖 AI 平台').proxies[0],'🏠 家宽节点');
+ assert.equal(g.get('♻️ 美国自动').type,'url-test');
+ assert.equal(g.get('🤖 AI 平台').proxies[0],'🏠 家宽稳定');
  assert.equal(g.get('📚 学术资源').proxies[0],'DIRECT');
  if(config){
   const key=Object.keys(config['rule-providers']).find(k=>config['rule-providers'][k].url.endsWith('/Arxiv.list'));
@@ -65,13 +65,13 @@ for(const file of ['zju-sub-store.js','zju-sub-store-surge.js']){
  const noHK=fixture.filter(p=>p._subName!=='Plinx-high'||(!/HK|HKG|香港|Hong Kong/.test(p.name)&&p.countryCode!=='HK'));
  const absent=await run(noHK);
  assert(!absent.g.has('🇭🇰 香港节点'));assert.equal(absent.g.get('📄 arXiv').proxies[0],'REJECT');
- assert(!absent.g.get('🚀 手动选择').proxies.includes('🇭🇰 香港节点'));
+ assert(!absent.g.get('🚀 默认代理').proxies.includes('🇭🇰 香港节点'));
  // A country with no nodes and unknown buckets with no nodes are omitted, without broken references.
  const sparse=await run([node('家宽','Plinx-home'),node('US[01]')]);
  assert(!sparse.g.has('🇯🇵 日本节点'));assert(!sparse.g.has('🌐 其他高速节点'));
  // No US node must not silently select a different region for the legacy US automatic entry.
  const noUS=await run([node('家宽','Plinx-home'),node('HK[01]')]);
- assert.deepEqual(noUS.g.get('♻️ 自动选择').proxies,['REJECT']);
+ assert.deepEqual(noUS.g.get('♻️ 美国自动').proxies,['REJECT']);
  await assert.rejects(()=>run(fixture,{preferredNodesByRegion:{HK:'not-an-array'}}),/preferredNodesByRegion/);
  const cycleINI=ini.replace('custom_proxy_group=🌐 通用服务`select`[]DIRECT','custom_proxy_group=🌐 通用服务`select`[]🌐 通用服务');
  await assert.rejects(()=>run(fixture,{},cycleINI),/循环引用/);

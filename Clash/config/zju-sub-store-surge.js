@@ -68,11 +68,11 @@ function prioritizeNodes(nodes, code) {
 }
 // END REGION DEFINITIONS
 
-const expectedGroups = ['🚀 手动选择', '🏠 家宽节点', '🤖 AI 平台', 'ℹ️ 订阅信息', '♻️ 自动选择', '🏠 自动家宽', '🧩 Extra 节点', ...regionGroupNames, arxivGroupName];
+const expectedGroups = ['🚀 默认代理', '🚀 手动选择', '🏠 家宽节点', '🤖 AI 平台', 'ℹ️ 订阅信息', '♻️ 美国自动', '🏠 家宽稳定', '🧩 Extra 节点', ...regionGroupNames, arxivGroupName];
 const definitions = entries.filter(([key]) => key === 'custom_proxy_group').map(([, value]) => value.split('`'));
 const definedNames = new Set(definitions.map(parts => parts[0]));
 if (definedNames.size !== definitions.length || expectedGroups.some(name => !definedNames.has(name)) ||
-    definitions.some(([name, type]) => type !== (['♻️ 自动选择', '🏠 自动家宽'].includes(name) ? 'url-test' : 'select'))) {
+    definitions.some(([name, type]) => type !== (name === '♻️ 美国自动' ? 'url-test' : name === '🏠 家宽稳定' ? 'fallback' : 'select'))) {
   throw new Error('INI 需要完整的节点分类组，且策略组名称不可重复。');
 }
 const sourceProxies = await produceArtifact({
@@ -108,6 +108,10 @@ for (const proxy of proxies) {
 }
 if (!residential.length || !high.length) throw new Error('家宽或高速订阅没有 Surge 可用的 Hysteria2 节点');
 const select = (name, members) => ({ name, type: 'select', proxies: members });
+const stable = (name, members) => ({
+  name, type: 'fallback', proxies: members,
+  url: 'http://www.gstatic.com/generate_204', interval: 300, lazy: false,
+});
 const auto = (name, members) => ({
   name, type: 'url-test', proxies: members,
   url: 'http://www.gstatic.com/generate_204', interval: 300, tolerance: 100, lazy: false,
@@ -138,15 +142,16 @@ const arxivMembers = [
 
 const groups = [
   ...(infoProxies.length ? [select('ℹ️ 订阅信息', ['DIRECT', ...infoProxies.map(proxy => proxy.name)])] : []),
-  select('🚀 手动选择', ['♻️ 自动选择', ...regionGroups.map(group => group.name), ...normalProxies.map(proxy => proxy.name)]),
-  select('🏠 家宽节点', ['🏠 自动家宽', ...residential]),
-  ...(usNodes.length ? [auto('♻️ 自动选择', usNodes)] : [select('♻️ 自动选择', ['REJECT'])]),
+  select('🚀 默认代理', ['♻️ 美国自动', '🚀 手动选择', ...regionGroups.map(group => group.name), '🏠 家宽节点', ...(extra.length ? ['🧩 Extra 节点'] : [])]),
+  select('🚀 手动选择', normalProxies.map(proxy => proxy.name)),
+  select('🏠 家宽节点', ['🏠 家宽稳定', ...residential]),
+  ...(usNodes.length ? [auto('♻️ 美国自动', usNodes)] : [select('♻️ 美国自动', ['REJECT'])]),
   ...regionGroups,
   select(arxivGroupName, arxivMembers),
-  auto('🏠 自动家宽', residential),
+  stable('🏠 家宽稳定', residential),
   ...(extra.length ? [select('🧩 Extra 节点', extra)] : []),
   // AI 默认使用家宽组；也可固定到单个节点。
-  select('🤖 AI 平台', ['🏠 家宽节点', '♻️ 自动选择', ...(extra.length ? ['🧩 Extra 节点'] : []), ...normalProxies.map(proxy => proxy.name)]),
+  select('🤖 AI 平台', ['🏠 家宽稳定', '🏠 家宽节点', '🚀 默认代理', ...regionGroups.map(group => group.name), ...(extra.length ? ['🧩 Extra 节点'] : []), 'DIRECT']),
 ];
 // 校园、通用服务及学术/验证组从 INI 读取，保留独立出口切换。
 for (const [name, , ...selectors] of definitions) {
@@ -222,7 +227,9 @@ if (proxies.some(proxy => !convertedNames.has(proxy.name))) throw new Error('Sur
 const infoLines = infoProxies.map(proxy => `${proxy.name} = direct`);
 const groupLines = groups.map(group => group.type === 'url-test'
   ? `${group.name} = url-test, ${group.proxies.join(', ')}, interval=300, tolerance=100`
-  : `${group.name} = select, ${group.proxies.join(', ')}`);
+  : group.type === 'fallback'
+    ? `${group.name} = fallback, ${group.proxies.join(', ')}, interval=300`
+    : `${group.name} = select, ${group.proxies.join(', ')}`);
 const ruleLines = rules.map(rule => {
   if (rule.startsWith('RULE-SET,')) {
     const [, name, policy] = rule.split(',');

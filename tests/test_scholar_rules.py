@@ -63,11 +63,11 @@ class ScholarRules(unittest.TestCase):
             with self.subTest(host=host):
                 self.assertEqual(self.first_policy(host), ACADEMIC)
 
-    def test_proxy_search_follows_manual_selection(self):
-        self.assertEqual(self.groups[SEARCH][0], '[]🚀 手动选择')
-        self.assertIn('[]♻️ 自动选择', self.groups[SEARCH])
+    def test_proxy_search_follows_default_proxy(self):
+        self.assertEqual(self.groups[SEARCH][0], '[]🚀 默认代理')
+        self.assertIn('[]🏠 家宽节点', self.groups[SEARCH])
         for name in ['🏠 家宽节点']:
-            self.assertEqual(self.groups[name][0], '[]🏠 自动家宽')
+            self.assertEqual(self.groups[name][0], '[]🏠 家宽稳定')
             self.assertTrue(all(not x.startswith('[]') for x in self.groups[name][1:]))
         self.assertEqual(self.groups[ACADEMIC][0], '[]DIRECT')
 
@@ -89,20 +89,21 @@ class ScholarRules(unittest.TestCase):
         expected = json.loads((ROOT / 'tests/fixtures/group_order.json').read_text())
         self.assertEqual(list(self.groups), expected)
         self.assertEqual(list(self.groups).index('📄 arXiv'), list(self.groups).index('📚 学术资源') + 1)
-        self.assertEqual(self.groups['🚀 手动选择'][0], '[]♻️ 自动选择')
+        self.assertEqual(self.groups['🚀 默认代理'][0], '[]♻️ 美国自动')
         self.assertNotIn('⚡ 高速节点', self.groups)
-        self.assertIn('[]🇭🇰 香港节点', self.groups['🚀 手动选择'])
+        self.assertIn('[]🇭🇰 香港节点', self.groups['🚀 默认代理'])
+        self.assertTrue(all(not x.startswith('[]') for x in self.groups['🚀 手动选择']))
         self.assertEqual(self.groups['📄 arXiv'][0], '[]🇭🇰 香港节点')
         self.assertEqual(self.groups['✔ ZJU内网'][0], '[]DIRECT')
-        self.assertIn('[]🚀 手动选择', self.groups['✔ ZJU内网'])
+        self.assertIn('[]🚀 默认代理', self.groups['✔ ZJU内网'])
         self.assertEqual(self.groups['🌐 通用服务'][0], '[]DIRECT')
-        self.assertIn('[]🚀 手动选择', self.groups['🌐 通用服务'])
+        self.assertIn('[]🚀 默认代理', self.groups['🌐 通用服务'])
         for policy, path, rules in self.sources:
             self.assertIn(policy, {'DIRECT', 'REJECT', *self.groups})
         for host in ['www.youtube.com', 'www.netflix.com']:
             with self.subTest(host=host):
                 self.assertEqual(self.first_policy(host), '🌍 国外媒体')
-        self.assertEqual(self.first_policy('api.telegram.org'), '🚀 手动选择')
+        self.assertEqual(self.first_policy('api.telegram.org'), '🚀 默认代理')
         self.assertEqual(self.first_policy('www.bilibili.com'), '🌏 国内媒体')
         for host in ['www.microsoft.com', 'www.apple.com']:
             with self.subTest(host=host):
@@ -126,13 +127,13 @@ class ScholarRules(unittest.TestCase):
                 policy, source = line[8:].split(',', 1)
                 actual.append({'source': source, 'default': resolve(policy)})
         self.assertEqual(actual, baseline)
-        self.assertEqual(self.groups['🐟 漏网之鱼'][0], '[]🚀 手动选择')
-        self.assertEqual(self.groups['🌍 国外媒体'][0], '[]🚀 手动选择')
+        self.assertEqual(self.groups['🐟 漏网之鱼'][0], '[]🚀 默认代理')
+        self.assertEqual(self.groups['🌍 国外媒体'][0], '[]🚀 默认代理')
         self.assertEqual(self.groups['🌏 国内媒体'][0], '[]DIRECT')
         self.assertEqual(self.groups['🛑 广告拦截'][0], '[]REJECT')
         self.assertEqual(self.groups['🛡️ 隐私防护'][0], '[]REJECT')
         self.assertEqual(self.first_policy('rvpn.zju.edu.cn'), 'DIRECT')
-        self.assertEqual(self.first_policy('mail.google.com'), '🚀 手动选择')
+        self.assertEqual(self.first_policy('mail.google.com'), '🚀 默认代理')
         self.assertEqual(self.first_policy('login.microsoftonline.com'), '🌐 通用服务')
 
     def test_arxiv_priority_and_domain_boundaries(self):
