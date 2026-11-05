@@ -151,7 +151,7 @@ const groups = [
   stable('🏠 家宽稳定', residential),
   ...(extra.length ? [select('🧩 Extra 节点', extra)] : []),
   // AI 默认使用家宽组；也可固定到单个节点。
-  select('🤖 AI 平台', ['🏠 家宽稳定', '🏠 家宽节点', '🚀 默认代理', ...regionGroups.map(group => group.name), ...(extra.length ? ['🧩 Extra 节点'] : []), 'DIRECT']),
+  select('🤖 AI 平台', ['🏠 家宽稳定', '🏠 家宽节点', '♻️ 美国自动', '🚀 默认代理', ...regionGroups.map(group => group.name), ...(extra.length ? ['🧩 Extra 节点'] : []), 'DIRECT']),
 ];
 // 校园、通用服务及学术/验证组从 INI 读取，保留独立出口切换。
 for (const [name, , ...selectors] of definitions) {

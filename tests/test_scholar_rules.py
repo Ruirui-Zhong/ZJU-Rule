@@ -90,6 +90,8 @@ class ScholarRules(unittest.TestCase):
         self.assertEqual(list(self.groups), expected)
         self.assertEqual(list(self.groups).index('📄 arXiv'), list(self.groups).index('📚 学术资源') + 1)
         self.assertEqual(self.groups['🚀 默认代理'][0], '[]♻️ 美国自动')
+        self.assertEqual(self.groups['🤖 AI 平台'][0], '[]🏠 家宽稳定')
+        self.assertIn('[]♻️ 美国自动', self.groups['🤖 AI 平台'])
         self.assertNotIn('⚡ 高速节点', self.groups)
         self.assertIn('[]🇭🇰 香港节点', self.groups['🚀 默认代理'])
         self.assertTrue(all(not x.startswith('[]') for x in self.groups['🚀 手动选择']))

@@ -50,6 +50,7 @@ for(const file of ['zju-sub-store.js','zju-sub-store-surge.js']){
   }
   assert.equal(g('🏠 家宽节点').proxies[0],'🏠 家宽稳定');
   assert.equal(g('🤖 AI 平台').proxies[0],'🏠 家宽稳定');
+  assert(g('🤖 AI 平台').proxies.includes('♻️ 美国自动'));
   assert.equal(g('🚀 默认代理').proxies[0],'♻️ 美国自动');
   assert(g('🚀 手动选择').proxies.every(n=>!groups.some(x=>x.name===n)));
   for(const name of ['🤖 AI 平台','🔎 学术搜索','🌍 国外媒体','🐟 漏网之鱼'])assert(g(name).proxies.every(n=>['DIRECT','REJECT'].includes(n)||groups.some(x=>x.name===n)));
