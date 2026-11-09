@@ -13,3 +13,14 @@ DOMAIN-SUFFIX,figshare.com
 DOMAIN-SUFFIX,osf.io
 DOMAIN-SUFFIX,datadryad.org
 DOMAIN-SUFFIX,hal.science
+
+# 开放论文、会议论文库与科研工具；arXiv 保留独立规则。
+DOMAIN-SUFFIX,openreview.net
+DOMAIN-SUFFIX,aclanthology.org
+DOMAIN-SUFFIX,thecvf.com
+DOMAIN-SUFFIX,mlr.press
+DOMAIN-SUFFIX,jmlr.org
+DOMAIN-SUFFIX,proceedings.neurips.cc
+DOMAIN-SUFFIX,semanticscholar.org
+DOMAIN-SUFFIX,overleaf.com
+DOMAIN-SUFFIX,zotero.org

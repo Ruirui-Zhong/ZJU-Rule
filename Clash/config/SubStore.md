@@ -58,7 +58,7 @@
 - 国外媒体合并 YouTube、Netflix、巴哈姆特和其他国外媒体；国内媒体合并哔哩哔哩、网易云音乐和其他国内媒体。
 - 通用服务合并微软/Bing/OneDrive、苹果、游戏、FCM，保留默认直连及代理切换能力。普通 Google 服务沿原通用代理规则，GoogleCN 例外归全球直连；谷歌学术独立。
 - 广告拦截合并 BanAD、BanProgramAD、BanEasyList、BanEasyListChina；BanEasyPrivacy 保留独立隐私防护。
-- 所有 49 项规则来源、匹配优先级和合并前的默认直连/代理/拦截方向保持不变。LAN、Tailscale、RVPN/WebVPN 登录入口保留硬性直连，避免递归代理；ResearchGate 保留自定义直连。
+- 所有既有规则来源、匹配优先级和合并前的默认直连/代理/拦截方向保持不变。LAN、Tailscale、RVPN/WebVPN 登录入口保留硬性直连，避免递归代理；ResearchGate 保留自定义直连。
 - `FINAL` 必须交给漏网之鱼；域名未列出但命中 GEOIP 等规则时，仍按命中的规则处理。
 - AI 默认家宽，其他需要代理的组默认手动选择；校园、国内媒体、通用服务、全球直连、学术资源和拦截组不强制走高速。
 - `♻️ 美国自动`：仅对美国 US 节点测试可用性与延迟，间隔 300 秒、切换容差 100ms；其他地区不参与。`🚀 默认代理` 默认选此自动组；手动选择仅保留非 Extra 的实际节点。家宽组默认自动家宽，也可手动固定节点，不再生成高速组。AI 默认家宽，也可选择美国自动组。测试通过不代表 GPT 等特定网站一定可用，切换不迁移已有连接。
@@ -131,3 +131,17 @@ Mihomo YAML 不能作为完整 Surge 配置导入。单独新建文件 `ZJU-Plin
 ## 简化出口
 
 普通需要代理的业务统一跟随“🚀 默认代理”（默认美国自动）；“🚀 手动选择”只列真实普通节点，不含自动/地区组。AI 默认“🏠 家宽稳定”，按优先顺序使用第一个可用家宽节点，失效再切换；家宽手动入口继续保留。arXiv 香港首选、Extra 独立及其他直连/拦截意图不变。规则顺序保持原样，无新增构建或发布工具。
+
+## 学术规则统一维护
+
+学术域名、投稿系统例外与社区规则源统一保存在本仓库，不需要 Sub-Store 后置“学术分流增强”脚本，也不增加 OpenReview 或学术下载回退策略组。
+
+- `ProxyPriority.list`：Manuscript Central 主站及子域名优先交给默认代理。
+- `ResearchDirect.list`：ResearchGate、Editorial Manager 保持直连。
+- `AcademicSupplement.list`：OpenReview、ACL Anthology、CVF、PMLR、JMLR、Overleaf、Zotero 等交给现有学术资源策略。arXiv 的独立规则仍优先。
+- `CommunityAcademic.list`：从 [MetaCubeX 学术域名库](https://github.com/MetaCubeX/meta-rules-dat/blob/meta/geo/geosite/category-scholar-%21cn.list) 转换为标准 classical 规则；裸域名保留精确匹配，`+.` 保留后缀匹配。GitHub Actions 每天同步，有变化才提交；上游失败或异常数据不会覆盖现有文件。客户端每 86400 秒更新仓库规则。自动任务可能延迟，需在 Actions 中检查实际运行结果。
+- `scripts/sync_community_academic.py` 同步社区规则及其 YAML Provider；不要手动编辑生成内容。
+
+从旧配置迁移：先确认新版 `ZJU.ini` 和规则文件已发布，将 Sub-Store 文件来源更新为仓库新版 INI；保留原转换脚本及个人节点偏好，移除后置增强操作，预览通过后保存。更新客户端完整订阅，而不只是更新规则缓存。若使用固定提交链接，需要切换到包含此次规则的提交。
+
+个人首选节点、端口、系统代理、DNS 与 TUN 等机器相关设置继续留在客户端或个人参数中，不写入公共规则仓库。

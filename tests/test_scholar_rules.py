@@ -40,6 +40,29 @@ class ScholarRules(unittest.TestCase):
                     return policy
         return None
 
+    def test_submission_platforms_and_boundaries(self):
+        for host in ['manuscriptcentral.com', 'mc.manuscriptcentral.com']:
+            self.assertEqual(self.first_policy(host), '🚀 默认代理')
+        for host in ['editorialmanager.com', 'www.editorialmanager.com']:
+            self.assertEqual(self.first_policy(host), 'DIRECT')
+        for host in ['manuscriptcentral.com.example.com', 'notmanuscriptcentral.com']:
+            self.assertNotEqual(self.first_policy(host), '🚀 默认代理')
+        self.assertNotIn('📄 OpenReview', self.groups)
+        self.assertNotIn('📑 学术下载自动回退', self.groups)
+
+    def test_community_source_validation(self):
+        from scripts.sync_community_academic import convert
+        for text in ['', '<html>error</html>', '+.openreview.net']:
+            with self.subTest(text=text):
+                with self.assertRaises(ValueError):
+                    convert(text)
+        sample = '+.openreview.net\nexact.example.org\n' + '\n'.join(
+            '+.host%d.example.org' % i for i in range(100))
+        rules = convert(sample)
+        self.assertIn('DOMAIN,exact.example.org', rules)
+        self.assertNotIn('DOMAIN-SUFFIX,exact.example.org', rules)
+        self.assertIn('DOMAIN-SUFFIX,openreview.net', rules)
+
     def test_google_scholar_and_dependencies(self):
         rules = (ROOT / 'Clash/ScholarProxy.list').read_text().splitlines()
         for rule in rules:
@@ -145,12 +168,13 @@ class ScholarRules(unittest.TestCase):
             self.assertNotEqual(self.first_policy(host), '📄 arXiv')
         self.assertEqual(self.groups['📄 arXiv'][0], '[]🇭🇰 香港节点')
         self.assertIn('[]DIRECT', self.groups['📄 arXiv'])
-        for policy, _, rules in self.sources:
-            if policy == ACADEMIC:
+        for policy, path, rules in self.sources:
+            if policy == ACADEMIC and path.name != 'CommunityAcademic.list':
                 self.assertNotIn('DOMAIN-SUFFIX,arxiv.org', rules)
 
     def test_new_provider_mirrors_and_sources_exist(self):
-        for name in ['ScholarProxy', 'AcademicSupplement', 'AcademicPublishers', 'Arxiv']:
+        for name in ['ScholarProxy', 'AcademicSupplement', 'AcademicPublishers', 'Arxiv',
+                     'CommunityAcademic', 'ResearchDirect', 'ProxyPriority']:
             expected = [x for x in (ROOT / f'Clash/{name}.list').read_text().splitlines()
                         if x.strip() and not x.startswith('#')]
             actual = [x.strip()[2:] for x in (ROOT / f'Clash/Providers/{name}.yaml').read_text().splitlines()
