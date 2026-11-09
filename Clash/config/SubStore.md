@@ -136,7 +136,7 @@ Mihomo YAML 不能作为完整 Surge 配置导入。单独新建文件 `ZJU-Plin
 
 学术域名、投稿系统例外与社区规则源统一保存在本仓库，不需要 Sub-Store 后置“学术分流增强”脚本，也不增加 OpenReview 或学术下载回退策略组。
 
-- `ProxyPriority.list`：Manuscript Central 主站及子域名优先交给默认代理。
+- `ProxyPriority.list`：Manuscript Central、Preprints.org 主站及子域名优先交给默认代理。
 - `ResearchDirect.list`：ResearchGate、Editorial Manager 保持直连。
 - `AcademicSupplement.list`：OpenReview、ACL Anthology、CVF、PMLR、JMLR、Overleaf、Zotero 等交给现有学术资源策略。arXiv 的独立规则仍优先。
 - `CommunityAcademic.list`：从 [MetaCubeX 学术域名库](https://github.com/MetaCubeX/meta-rules-dat/blob/meta/geo/geosite/category-scholar-%21cn.list) 转换为标准 classical 规则；裸域名保留精确匹配，`+.` 保留后缀匹配。GitHub Actions 每天同步，有变化才提交；上游失败或异常数据不会覆盖现有文件。客户端每 86400 秒更新仓库规则。自动任务可能延迟，需在 Actions 中检查实际运行结果。

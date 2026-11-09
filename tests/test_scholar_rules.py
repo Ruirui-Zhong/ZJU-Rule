@@ -41,11 +41,13 @@ class ScholarRules(unittest.TestCase):
         return None
 
     def test_submission_platforms_and_boundaries(self):
-        for host in ['manuscriptcentral.com', 'mc.manuscriptcentral.com']:
+        for host in ['manuscriptcentral.com', 'mc.manuscriptcentral.com',
+                     'preprints.org', 'www.preprints.org']:
             self.assertEqual(self.first_policy(host), '🚀 默认代理')
         for host in ['editorialmanager.com', 'www.editorialmanager.com']:
             self.assertEqual(self.first_policy(host), 'DIRECT')
-        for host in ['manuscriptcentral.com.example.com', 'notmanuscriptcentral.com']:
+        for host in ['manuscriptcentral.com.example.com', 'notmanuscriptcentral.com',
+                     'preprints.org.example.com', 'notpreprints.org']:
             self.assertNotEqual(self.first_policy(host), '🚀 默认代理')
         self.assertNotIn('📄 OpenReview', self.groups)
         self.assertNotIn('📑 学术下载自动回退', self.groups)

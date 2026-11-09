@@ -4,3 +4,6 @@ DOMAIN-SUFFIX,plinx.net
 
 # ScholarOne 投稿系统：避免落入直连兜底。
 DOMAIN-SUFFIX,manuscriptcentral.com
+
+# Preprints.org：当前直连路径握手失败，使用现有默认代理。
+DOMAIN-SUFFIX,preprints.org
