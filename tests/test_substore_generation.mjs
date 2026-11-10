@@ -49,6 +49,7 @@ for(const file of ['zju-sub-store.js','zju-sub-store-surge.js']){
    if(!surge){assert.equal(g(name).interval,300);assert.equal(g(name).lazy,false);}
   }
   assert.equal(g('🏠 家宽节点').proxies[0],'🏠 家宽稳定');
+  assert.deepEqual(g('Claude').proxies,surge?['家宽测试']:['家宽测试','家宽VLESS测试']);
   assert.equal(g('🤖 AI 平台').proxies[0],'🏠 家宽稳定');
   assert(g('🤖 AI 平台').proxies.includes('♻️ 美国自动'));
   assert.equal(g('🚀 默认代理').proxies[0],'♻️ 美国自动');

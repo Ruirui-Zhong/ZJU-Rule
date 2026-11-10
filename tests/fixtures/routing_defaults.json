@@ -56,6 +56,10 @@
     "default": "DIRECT"
   },
   {
+    "source": "https://raw.githubusercontent.com/Ruirui-Zhong/ZJU-Rule/main/Clash/Claude.list",
+    "default": "PROXY"
+  },
+  {
     "source": "https://raw.githubusercontent.com/Ruirui-Zhong/ZJU-Rule/main/Clash/AIPlatforms.list",
     "default": "PROXY"
   },

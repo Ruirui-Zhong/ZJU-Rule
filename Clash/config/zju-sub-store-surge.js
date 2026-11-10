@@ -68,7 +68,7 @@ function prioritizeNodes(nodes, code) {
 }
 // END REGION DEFINITIONS
 
-const expectedGroups = ['🚀 默认代理', '🚀 手动选择', '🏠 家宽节点', '🤖 AI 平台', 'ℹ️ 订阅信息', '♻️ 美国自动', '🏠 家宽稳定', '🧩 Extra 节点', ...regionGroupNames, arxivGroupName];
+const expectedGroups = ['🚀 默认代理', '🚀 手动选择', '🏠 家宽节点', 'Claude', '🤖 AI 平台', 'ℹ️ 订阅信息', '♻️ 美国自动', '🏠 家宽稳定', '🧩 Extra 节点', ...regionGroupNames, arxivGroupName];
 const definitions = entries.filter(([key]) => key === 'custom_proxy_group').map(([, value]) => value.split('`'));
 const definedNames = new Set(definitions.map(parts => parts[0]));
 if (definedNames.size !== definitions.length || expectedGroups.some(name => !definedNames.has(name)) ||
@@ -145,6 +145,8 @@ const groups = [
   select('🚀 默认代理', ['♻️ 美国自动', '🚀 手动选择', ...regionGroups.map(group => group.name), '🏠 家宽节点', ...(extra.length ? ['🧩 Extra 节点'] : [])]),
   select('🚀 手动选择', normalProxies.map(proxy => proxy.name)),
   select('🏠 家宽节点', ['🏠 家宽稳定', ...residential]),
+  // 直接列出家宽实际节点，独立保存 Claude 的选择，不跟随共享家宽组。
+  select('Claude', [...residential]),
   ...(usNodes.length ? [auto('♻️ 美国自动', usNodes)] : [select('♻️ 美国自动', ['REJECT'])]),
   ...regionGroups,
   select(arxivGroupName, arxivMembers),

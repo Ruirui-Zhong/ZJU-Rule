@@ -65,6 +65,17 @@ class ScholarRules(unittest.TestCase):
         self.assertNotIn('DOMAIN-SUFFIX,exact.example.org', rules)
         self.assertIn('DOMAIN-SUFFIX,openreview.net', rules)
 
+    def test_claude_independent_from_other_ai(self):
+        for host in ['claude.ai', 'api.claude.ai', 'www.claude.com', 'api.anthropic.com']:
+            self.assertEqual(self.first_policy(host), 'Claude')
+        for host in ['chatgpt.com', 'api.openai.com', 'gemini.google.com']:
+            self.assertEqual(self.first_policy(host), '🤖 AI 平台')
+        for host in ['claude.ai.example.com', 'notclaude.ai']:
+            self.assertNotEqual(self.first_policy(host), 'Claude')
+        ai = (ROOT / 'Clash/AIPlatforms.list').read_text().splitlines()
+        self.assertFalse(any(matches(rule, host) for rule in ai
+                             for host in ['claude.ai', 'api.anthropic.com']))
+
     def test_google_scholar_and_dependencies(self):
         rules = (ROOT / 'Clash/ScholarProxy.list').read_text().splitlines()
         for rule in rules:
@@ -176,7 +187,7 @@ class ScholarRules(unittest.TestCase):
 
     def test_new_provider_mirrors_and_sources_exist(self):
         for name in ['ScholarProxy', 'AcademicSupplement', 'AcademicPublishers', 'Arxiv',
-                     'CommunityAcademic', 'ResearchDirect', 'ProxyPriority']:
+                     'CommunityAcademic', 'ResearchDirect', 'ProxyPriority', 'Claude', 'AIPlatforms']:
             expected = [x for x in (ROOT / f'Clash/{name}.list').read_text().splitlines()
                         if x.strip() and not x.startswith('#')]
             actual = [x.strip()[2:] for x in (ROOT / f'Clash/Providers/{name}.yaml').read_text().splitlines()
