@@ -67,11 +67,11 @@ function prioritizeNodes(nodes, code) {
 }
 // END REGION DEFINITIONS
 
-const expectedGroups = ['🚀 默认代理', '🚀 手动选择', '🏠 家宽节点', 'Claude', '🤖 AI 平台', 'ℹ️ 订阅信息', '♻️ 美国自动', '🏠 家宽稳定', '🧩 Extra 节点', ...regionGroupNames, arxivGroupName];
+const expectedGroups = ['🚀 默认代理', '🚀 手动选择', '🏠 家宽节点', 'Claude', '🤖 AI 平台', 'ℹ️ 订阅信息', '♻️ 美国自动', '🏠 家宽稳定', '🏠 家宽 IPv6', '🧩 Extra 节点', ...regionGroupNames, arxivGroupName];
 const definitions = entries.filter(([key]) => key === 'custom_proxy_group').map(([, value]) => value.split('`'));
 const definedNames = new Set(definitions.map(parts => parts[0]));
 if (definedNames.size !== definitions.length || expectedGroups.some(name => !definedNames.has(name)) ||
-    definitions.some(([name, type]) => type !== (name === '♻️ 美国自动' ? 'url-test' : name === '🏠 家宽稳定' ? 'fallback' : 'select'))) {
+    definitions.some(([name, type]) => type !== (name === '♻️ 美国自动' ? 'url-test' : ['🏠 家宽稳定', '🏠 家宽 IPv6'].includes(name) ? 'fallback' : 'select'))) {
   throw new Error('INI 需要完整的节点分类组，且策略组名称不可重复。');
 }
 const sourceProxies = await produceArtifact({
@@ -103,6 +103,14 @@ for (const proxy of proxies) {
   else if (category !== 'other') throw new Error(`发现未知订阅来源 ${proxy._subName}，请在 sourceCategory 中登记为 residential、high、extra 或 other`);
 }
 if (!residential.length || !high.length) throw new Error('家宽或高速订阅没有可用节点，请检查两个订阅');
+// Classify the entry, not its exit IP: no DNS requests during subscription generation.
+const residentialIPv6 = proxies.filter(proxy => {
+  if (sourceCategory[proxy._subName] !== 'residential') return false;
+  const server = String(proxy.server ?? '').replace(/^\[|\]$/g, '');
+  return /(?:^|[^A-Za-z0-9])(?:ipv6|v6)(?=$|[^A-Za-z0-9])/i.test(proxy.name) ||
+    (server.includes(':') && /^[0-9a-f:.]+$/i.test(server));
+}).map(proxy => proxy.name);
+const ipv6Options = residentialIPv6.length ? ['🏠 家宽 IPv6'] : [];
 const select = (name, members) => ({ name, type: 'select', proxies: members });
 const stable = (name, members) => ({
   name, type: 'fallback', proxies: members,
@@ -138,18 +146,19 @@ const arxivMembers = [
 
 const groups = [
   ...(infoProxies.length ? [select('ℹ️ 订阅信息', ['DIRECT', ...infoProxies.map(proxy => proxy.name)])] : []),
-  select('🚀 默认代理', ['♻️ 美国自动', '🚀 手动选择', ...regionGroups.map(group => group.name), '🏠 家宽节点', ...(extra.length ? ['🧩 Extra 节点'] : [])]),
+  select('🚀 默认代理', ['♻️ 美国自动', '🚀 手动选择', ...regionGroups.map(group => group.name), '🏠 家宽节点', ...ipv6Options, ...(extra.length ? ['🧩 Extra 节点'] : [])]),
   select('🚀 手动选择', normalProxies.map(proxy => proxy.name)),
-  select('🏠 家宽节点', ['🏠 家宽稳定', ...residential]),
-  // 直接列出家宽实际节点，独立保存 Claude 的选择，不跟随共享家宽组。
-  select('Claude', [...residential]),
+  select('🏠 家宽节点', ['🏠 家宽稳定', ...ipv6Options, ...residential]),
+  // Claude 默认仍直接选家宽节点；也可显式选择 IPv6 自动回退。
+  select('Claude', [...residential, ...ipv6Options]),
   ...(usNodes.length ? [auto('♻️ 美国自动', usNodes)] : [select('♻️ 美国自动', ['REJECT'])]),
   ...regionGroups,
   select(arxivGroupName, arxivMembers),
   stable('🏠 家宽稳定', residential),
+  ...(residentialIPv6.length ? [{ ...stable('🏠 家宽 IPv6', residentialIPv6), interval: 60, timeout: 5000 }] : []),
   ...(extra.length ? [select('🧩 Extra 节点', extra)] : []),
   // AI 默认使用家宽组；也可固定到单个节点。
-  select('🤖 AI 平台', ['🏠 家宽稳定', '🏠 家宽节点', '♻️ 美国自动', '🚀 默认代理', ...regionGroups.map(group => group.name), ...(extra.length ? ['🧩 Extra 节点'] : []), 'DIRECT']),
+  select('🤖 AI 平台', ['🏠 家宽稳定', '🏠 家宽节点', ...ipv6Options, '♻️ 美国自动', '🚀 默认代理', ...regionGroups.map(group => group.name), ...(extra.length ? ['🧩 Extra 节点'] : []), 'DIRECT']),
 ];
 // 校园、通用服务及学术/验证组从 INI 读取，保留独立出口切换。
 for (const [name, , ...selectors] of definitions) {
@@ -159,6 +168,7 @@ for (const [name, , ...selectors] of definitions) {
     if (selector.startsWith('[]')) {
       const member = selector.slice(2);
       if (member === '🧩 Extra 节点' && !extra.length) continue;
+      if (member === '🏠 家宽 IPv6' && !residentialIPv6.length) continue;
       if (regionGroupNames.includes(member) && !availableRegionNames.has(member)) continue;
       if (!definedNames.has(member) && !['DIRECT', 'REJECT'].includes(member)) {
         throw new Error(`应用策略组引用不存在：${member}`);

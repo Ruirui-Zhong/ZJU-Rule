@@ -104,7 +104,8 @@ class ScholarRules(unittest.TestCase):
         self.assertIn('[]🏠 家宽节点', self.groups[SEARCH])
         for name in ['🏠 家宽节点']:
             self.assertEqual(self.groups[name][0], '[]🏠 家宽稳定')
-            self.assertTrue(all(not x.startswith('[]') for x in self.groups[name][1:]))
+            self.assertEqual(self.groups[name][1], '[]🏠 家宽 IPv6')
+            self.assertTrue(all(not x.startswith('[]') for x in self.groups[name][2:]))
         self.assertEqual(self.groups[ACADEMIC][0], '[]DIRECT')
 
     def test_shared_challenge_and_researchgate_preserved(self):

@@ -23,7 +23,7 @@ for(const file of ['zju-sub-store.js','zju-sub-store-surge.js']){
  for(const withInfo of [true,false])for(const withExtra of [true,false]){
   const nodes=fixture.filter(x=>(withInfo||x.name!=='剩余流量')&&(withExtra||x._subName!=='Plinx-Extra'));
   const out=await fn(ini,[],async()=>structuredClone(nodes),utils);
-  const namesExpected=expected.filter(x=>(withInfo||x!=='ℹ️ 订阅信息')&&(withExtra||x!=='🧩 Extra 节点')&&!['🇭🇰 香港节点','🇹🇼 台湾节点','🇸🇬 新加坡节点','🇰🇷 韩国节点','🇩🇪 德国节点','🇬🇧 英国节点','🌐 其他高速节点'].includes(x));
+  const namesExpected=expected.filter(x=>(withInfo||x!=='ℹ️ 订阅信息')&&(withExtra||x!=='🧩 Extra 节点')&&!['🏠 家宽 IPv6','🇭🇰 香港节点','🇹🇼 台湾节点','🇸🇬 新加坡节点','🇰🇷 韩国节点','🇩🇪 德国节点','🇬🇧 英国节点','🌐 其他高速节点'].includes(x));
   let groups;
   if(!surge){
    const c=JSON.parse(out);groups=c['proxy-groups'];
