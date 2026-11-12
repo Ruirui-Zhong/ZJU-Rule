@@ -29,7 +29,7 @@
 | 参数 | 行为 |
 | --- | --- |
 | `profile: "default"`（默认） | 使用 INI 本身声明的默认项 |
-| `profile: "server"` | AI 和 Claude 使用家宽稳定组，IPv6 入口排在 IPv4 前，每 60 秒检查并自动回退 |
+| `profile: "server"` | AI 和 Claude 默认使用家宽 IPv6 组；中转 IPv4 需手动选择，不在两组之间自动切换 |
 | `profile: "home"` | AI 和 Claude 优先家宽 IPv4 自动回退 |
 | `profile: "campus"` | 学术资源默认直连，机构认证跟随校园组，验证跟随学术资源 |
 | `layout: "compact"`（默认） | 微软、苹果、游戏等映射到通用服务；视频映射到国外媒体 |
@@ -59,6 +59,7 @@
 此时路径为服务器 → 高速中转 → 家宽 IPv4 入口 → 目标网站；网站看到的仍是家宽出口。
 生成器新增 `🔗 家宽中转` 自动回退组，并仅给 IPv4 家宽 VLESS 节点设置 Mihomo 的 `dialer-proxy`。
 保留家宽 IPv6 直连，避免把整个家宽组与高速组互相引用；Hy2 等 UDP 家宽协议保持原配置。
+服务器默认选中 `🏠 家宽 IPv6`，仅在该组内回退；IPv6 入口全部失效时不会自动使用中转 IPv4。需要时手动将 AI 和 Claude 改选 `🏠 家宽 IPv4`。
 默认不启用中转。Mac 家用网络同样连不上家宽 IPv4 时，也可在 `profile: "home"` 的文件启用此参数，使用前两个 IPv4 高速中转入口即可，不依赖家庭 IPv6。Surge 文件保持原配置。
 节点名称应与订阅一致；某个来源缺失时不生成无效引用。名称相同服务器上的两个中转协议仍可能同时故障。
 中转会增加时延，并同时消耗高速和家宽两端流量；它绕过原入口路径故障，不代表原路径已经恢复。
@@ -68,8 +69,8 @@
 
 ```bash
 clashsub use PlinX-Merge
-clashnode use "🤖 AI 平台" "🏠 家宽稳定"
-clashnode use "Claude" "🏠 家宽稳定"
+clashnode use "🤖 AI 平台" "🏠 家宽 IPv6"
+clashnode use "Claude" "🏠 家宽 IPv6"
 ```
 
 健康检查检测一般连通性，不证明特定 AI 服务已经解锁。故障切换不能迁移已经中断的连接；共同出口或整个网络故障时，组内节点仍可能同时不可用。
