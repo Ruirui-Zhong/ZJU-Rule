@@ -26,7 +26,12 @@ for(const subset of [nodes.filter(p=>p._subName!=='Plinx-high'),nodes.filter(p=>
 const existing=await generate('ClashMeta',nodes.map(p=>p.name==='家宽 IPv4'?{...p,'dialer-proxy':'DIRECT'}:p),args);
 assert.equal(existing.config.proxies.find(p=>p.name==='家宽 IPv4')['dialer-proxy'],'DIRECT');
 assert(!existing.g.has('🔗 家宽中转'));
-assert(!(await generate('Surge',nodes,args)).g.has('🔗 家宽中转'));
+const surge=await generate('Surge',nodes,args);
+assert.deepEqual(surge.g.get('🔗 家宽中转').proxies,['HK[02]','US[14]-v6']);
+const line=name=>surge.output.split('\n').find(line=>line.startsWith(name+' = vless,'));
+assert(line('家宽 IPv4').includes('underlying-proxy='));
+assert(!line('家宽-v6').includes('underlying-proxy='));
+assert(!surge.output.includes('dialer-proxy='));
 await assert.rejects(()=>generate('ClashMeta',nodes,{residentialIPv4Relay:'HK[02]'}),/必须是高速中转节点名称数组/);
 await assert.rejects(()=>generate('ClashMeta',[...nodes,node('🔗 家宽中转')],args),/名称.*冲突/);
 console.log('Residential relay: independent high-speed hops, IPv6-first failover, opt-in and partial sources passed');

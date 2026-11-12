@@ -43,7 +43,10 @@ const sourceProxies = await produceArtifact({type: 'collection', name: collectio
   produceType: 'internal', ignoreFailedRemoteSub: 'fallbackQuiet'});
 if (!Array.isArray(sourceProxies)) throw new Error('组合订阅没有返回节点数组');
 const notice = /通知|公告|剩余|重置|到期|流量|套餐|更新订阅|无节点可用/;
-const proxies = sourceProxies.filter(p => !notice.test(p.name ?? '') && (target !== 'Surge' || p.type === 'hysteria2')).map(p => ({...p}));
+// @SURGE_VLESS@
+const actualProxies = sourceProxies.filter(p => !notice.test(p.name ?? ''));
+const proxies = actualProxies.filter(p => target !== 'Surge' || p.type === 'hysteria2' ||
+  (p.type === 'vless' && !surgeVlessUnsupported(p))).map(p => ({...p}));
 if (!proxies.length) throw new Error('订阅中没有当前客户端支持的实际节点；请保留上次有效配置');
 const infoProxies = sourceProxies.filter(p => notice.test(p.name ?? '')).map(p => ({...p, name: `[${p._subName ?? '未知订阅'}] ${p.name}`}));
 const occupied = new Set(['DIRECT', 'REJECT', ...definedNames]);
@@ -70,8 +73,8 @@ const residential = proxies.filter(p => category(p) === 'residential');
 const relayNames = scriptArguments.residentialIPv4Relay ?? [];
 if (!Array.isArray(relayNames) || relayNames.some(name => typeof name !== 'string'))
   throw new Error('residentialIPv4Relay 必须是高速中转节点名称数组');
-const relayMembers = [...new Set(relayNames)].filter(name => high.some(p => p.name === name && !p['dialer-proxy']));
-const relayTargets = target === 'Surge' ? [] : residential.filter(p =>
+const relayMembers = [...new Set(relayNames)].filter(name => high.some(p => p.name === name && !p['dialer-proxy'] && !p['underlying-proxy']));
+const relayTargets = residential.filter(p =>
   !isIPv6Entry(p) && p.type === 'vless' && !p['dialer-proxy']);
 const relayName = '🔗 家宽中转';
 const relayEnabled = relayMembers.length > 0 && relayTargets.length > 0;
@@ -166,6 +169,10 @@ for (const [name, choice] of Object.entries(selections)) {
 }
 const validNames = new Set(['DIRECT', 'REJECT', ...proxies.map(p => p.name), ...infoProxies.map(p => p.name), ...outputGroups.map(g => g.name)]);
 for (const group of outputGroups) for (const member of group.proxies) if (!validNames.has(member)) throw new Error(`输出策略引用不存在：${member}`);
+if (target === 'Surge') for (const proxy of proxies) {
+  const underlying = proxy['dialer-proxy'] ?? proxy['underlying-proxy'];
+  if (underlying && !validNames.has(underlying)) throw new Error('Surge 中转引用不存在：'+underlying);
+}
 const policyNames = new Set(['DIRECT', 'REJECT', ...outputGroups.map(g => g.name)]);
 const providers = {}, rules = [];
 function stableID(source) {
@@ -202,15 +209,20 @@ if (target !== 'Surge') {
   $content = ProxyUtils.yaml.dump({'mixed-port':7890, 'allow-lan':false, mode:'rule', 'log-level':'info',
     profile:{'store-selected':true}, proxies:[...proxies,...infoProxies], 'proxy-groups':outputGroups, 'rule-providers':providers, rules});
 } else {
-  const proxyLines = ProxyUtils.produce(proxies.map(p => ({...p})), 'Surge', 'internal');
-  if (!Array.isArray(proxyLines) || proxyLines.length !== proxies.length) throw new Error('有 Hysteria2 节点无法转换为 Surge');
+  const hy2 = proxies.filter(p => p.type === 'hysteria2');
+  const hy2Lines = hy2.length ? ProxyUtils.produce(hy2.map(p => ({...p})), 'Surge', 'internal') : [];
+  if (!Array.isArray(hy2Lines) || hy2Lines.length !== hy2.length) throw new Error('有 Hysteria2 节点无法转换为 Surge');
+  const hy2ByName = new Map(hy2Lines.map(line => [line.slice(0,line.indexOf('=')).trim(), line]));
+  const proxyLines = proxies.map(p => p.type === 'vless' ? surgeVlessLine(p) : hy2ByName.get(p.name));
+  if (proxyLines.some(line => typeof line !== 'string')) throw new Error('Surge 转换后缺少节点');
   const converted = new Set(proxyLines.map(line => line.slice(0,line.indexOf('=')).trim()));
   if (proxies.some(p => !converted.has(p.name))) throw new Error('Surge 转换后的节点名称不一致');
   const groupLines = outputGroups.map(g => `${g.name} = ${g.type}, ${g.proxies.join(', ')}`+
     (g.type === 'select' ? '' : `, interval=${g.interval}`+(g.type === 'url-test' ? `, tolerance=${g.tolerance}` : '')));
   const ruleLines = rules.map(rule => rule.startsWith('RULE-SET,')
     ? `RULE-SET,${providers[rule.split(',')[1]].url},${rule.split(',')[2]}` : rule.replace(/^MATCH,/, 'FINAL,'));
-  $content = ['# ZJU Rule — Surge (Hysteria2)', '[General]', 'loglevel = notify',
+  $content = ['# ZJU Rule — Surge (VLESS + Hysteria2; Mac 6.12+ / iOS 6+)',
+    '# Unsupported nodes omitted: '+(actualProxies.length-proxies.length), '[General]', 'loglevel = notify',
     'proxy-test-url = http://www.gstatic.com/generate_204', 'test-timeout = 5', '', '[Proxy]',
     ...proxyLines, ...infoProxies.map(p => `${p.name} = direct`), '', '[Proxy Group]', ...groupLines,
     '', '[Rule]', ...ruleLines, ''].join('\n');

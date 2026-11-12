@@ -6,7 +6,8 @@ const root=path.resolve(path.dirname(new URL(import.meta.url).pathname),'..');
 const ini=fs.readFileSync(path.join(root,'Clash/config/ZJU.ini'),'utf8');
 const AsyncFunction=Object.getPrototypeOf(async function(){}).constructor;
 const regions=['🇭🇰 香港节点','🇯🇵 日本节点','🇺🇸 美国节点','🇹🇼 台湾节点','🇸🇬 新加坡节点','🇰🇷 韩国节点','🇩🇪 德国节点','🇬🇧 英国节点','🌐 其他高速节点'];
-const node=(name,source='Plinx-high',extra={})=>({name,type:'hysteria2',_subName:source,...extra});
+const node=(name,source='Plinx-high',extra={})=>({name,type:'hysteria2',server:'example.invalid',port:443,
+ uuid:'2cae91b3-f85c-433b-88ee-a002b9ed6d61',_subName:source,...extra});
 const fixture=[
  node('家宽入口','Plinx-home'),node('HK[00]-家宽','Plinx-home'),
  node('HK[01]-测试'),node('HK[02]-测试'),

@@ -3,7 +3,9 @@ import path from 'node:path';
 const root = path.resolve(path.dirname(new URL(import.meta.url).pathname),'..');
 const read = file => fs.readFileSync(path.join(root,file),'utf8');
 const ini = read('Clash/config/ZJU.ini');
-const core = read('Clash/config/src/substore-core.js').replace('// @REGION_DEFINITIONS@',read('Clash/config/src/regions.js'));
+const core = read('Clash/config/src/substore-core.js')
+  .replace('// @REGION_DEFINITIONS@',read('Clash/config/src/regions.js'))
+  .replace('// @SURGE_VLESS@',read('Clash/config/src/surge-vless.js'));
 const outputs = new Map();
 for (const [suffix,target] of [['','ClashMeta'],['-surge','Surge']]) {
   outputs.set(`Clash/config/zju-sub-store${suffix}.js`,

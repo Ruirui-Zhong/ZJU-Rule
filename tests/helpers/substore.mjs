@@ -8,7 +8,8 @@ const utils = {yaml:{dump:JSON.stringify},produce:xs=>{
   assert(xs.every(x=>x.type==='hysteria2'));
   return xs.map(x=>`${x.name} = hysteria2, example.invalid, 443, password=test`);
 }};
-export const node = (name,source='Plinx-high',extra={})=>({name,type:'hysteria2',_subName:source,...extra});
+export const node = (name,source='Plinx-high',extra={})=>({name,type:'hysteria2',server:'example.invalid',port:443,
+  uuid:'2cae91b3-f85c-433b-88ee-a002b9ed6d61',_subName:source,...extra});
 export function parseSurge(output) {
   return output.split('[Proxy Group]\n')[1].split('[Rule]')[0].trim().split('\n').map(line=>{
     const [name,rhs]=line.split(' = ');const [type,...parts]=rhs.split(', ');

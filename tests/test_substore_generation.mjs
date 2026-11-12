@@ -15,8 +15,8 @@ for(const target of ['ClashMeta','Surge']){
     assert.equal(g.get('📚 学术资源').proxies[0],'🚀 默认代理');
     assert.equal(g.get('📚 机构认证').proxies[0],'✔ ZJU内网');
     assert.equal(g.get('🔐 公共验证').proxies[0],'🤖 AI 平台');
-    assert.deepEqual(g.get('♻️ 美国自动').proxies,surge?['US[02]-测试']:['US[02]-测试','US[07]-VLESS测试']);
-    assert.deepEqual(g.get('🏠 家宽 IPv4').proxies,surge?['家宽测试']:['家宽测试','家宽VLESS测试']);
+    assert.deepEqual(g.get('♻️ 美国自动').proxies,['US[02]-测试','US[07]-VLESS测试']);
+    assert.deepEqual(g.get('🏠 家宽 IPv4').proxies,['家宽测试','家宽VLESS测试']);
     assert(!g.has('🏠 家宽稳定'));
     assert(![...g.values()].some(group=>group.proxies.includes('🏠 家宽稳定')));
     assert.equal(g.has('🏠 家宽 IPv6'),false);
@@ -28,7 +28,7 @@ for(const target of ['ClashMeta','Surge']){
     assert(!g.get('🚀 手动选择').proxies.some(n=>n.includes('Extra')));
     assert.equal(g.has('Ⓜ️ 微软服务'),false);
     if(config){assert(config.proxies.some(n=>n.type==='vless'));assert.equal(config.rules.at(-1),'MATCH,🐟 漏网之鱼');assert.equal(config.profile['store-selected'],true);}
-    else{assert(!output.includes('VLESS测试'));assert(output.includes('FINAL,🐟 漏网之鱼'));}
+    else{assert(output.includes('家宽VLESS测试 = vless,'));assert(output.includes('FINAL,🐟 漏网之鱼'));}
   }
   const highOnly=await generate(target,fixture.filter(n=>n._subName==='Plinx-high'));
   assert.equal(highOnly.g.has('🏠 家宽稳定'),false);

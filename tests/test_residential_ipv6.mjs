@@ -8,7 +8,8 @@ const ini = fs.readFileSync(path.join(root, 'Clash/config/ZJU.ini'), 'utf8');
 const AsyncFunction = Object.getPrototypeOf(async function () {}).constructor;
 const groupName = '🏠 家宽 IPv6';
 const node = (name, source = 'Plinx-home', extra = {}) =>
-  ({name, type: 'hysteria2', _subName: source, ...extra});
+  ({name, type: 'hysteria2', server:'example.invalid', port:443,
+    uuid:'2cae91b3-f85c-433b-88ee-a002b9ed6d61', _subName: source, ...extra});
 const base = [node('家宽 IPv4'), node('US[01]', 'Plinx-high')];
 const fixture = [
   ...base,
@@ -56,7 +57,7 @@ for (const filename of ['zju-sub-store.js', 'zju-sub-store-surge.js']) {
 
   const result = await run(fixture);
   const expected = [
-    ...(!surge ? ['家宽14-VLESS-v6'] : []),
+    '家宽14-VLESS-v6',
     '家宽14-Hy2-IPv6', '家宽字面地址', '家宽方括号地址', '家宽14-v6', '家宽14-v6 (2)',
   ];
   assert.deepEqual(result.g(groupName).proxies, expected);
@@ -78,14 +79,14 @@ for (const filename of ['zju-sub-store.js', 'zju-sub-store-surge.js']) {
     assert.equal(result.g(groupName).lazy, false);
   }
 
-  // Older subscriptions and Surge's unsupported IPv6 VLESS nodes must not leave empty groups.
+  // Missing IPv6 entrances must not leave empty groups in either target.
   for (const nodes of [base, [...base, node('US[02]-v6', 'Plinx-high'), node('家宽-Extra-v6', 'Plinx-Extra')]]) {
     const absent = await run(nodes);
     assert.equal(absent.g(groupName), undefined);
     assert(absent.groups.every(g => !g.proxies.includes(groupName)));
   }
   const vlessOnly = await run([...base, node('家宽-VLESS-v6', 'Plinx-home', {type: 'vless'})]);
-  assert.equal(Boolean(vlessOnly.g(groupName)), !surge);
+  assert.equal(Boolean(vlessOnly.g(groupName)), true);
 
   // An INI-defined application can explicitly reference the optional group without phantom members.
   const customINI = ini.replace('custom_proxy_group=🌐 通用服务`select`[]DIRECT',
