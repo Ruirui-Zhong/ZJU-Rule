@@ -10,16 +10,18 @@ for(const target of ['ClashMeta','Surge']){
     const nodes=fixture.filter(n=>(withInfo||n.name!=='剩余流量')&&(withExtra||n._subName!=='Plinx-Extra'));
     const {g,config,output}=await generate(target,nodes);
     assert.equal(g.get('🚀 默认代理').proxies[0],'🔯 故障转移');
-    assert.equal(g.get('🤖 AI 平台').proxies[0],'🏠 家宽稳定');
-    assert.equal(g.get('Claude').proxies[0],'🏠 家宽稳定');
+    assert.equal(g.get('🤖 AI 平台').proxies[0],'🏠 家宽节点');
+    assert.equal(g.get('Claude').proxies[0],'🏠 家宽 IPv4');
     assert.equal(g.get('📚 学术资源').proxies[0],'🚀 默认代理');
     assert.equal(g.get('📚 机构认证').proxies[0],'✔ ZJU内网');
     assert.equal(g.get('🔐 公共验证').proxies[0],'🤖 AI 平台');
     assert.deepEqual(g.get('♻️ 美国自动').proxies,surge?['US[02]-测试']:['US[02]-测试','US[07]-VLESS测试']);
-    assert.deepEqual(g.get('🏠 家宽稳定').proxies,surge?['家宽测试']:['家宽测试','家宽VLESS测试']);
+    assert.deepEqual(g.get('🏠 家宽 IPv4').proxies,surge?['家宽测试']:['家宽测试','家宽VLESS测试']);
+    assert(!g.has('🏠 家宽稳定'));
+    assert(![...g.values()].some(group=>group.proxies.includes('🏠 家宽稳定')));
     assert.equal(g.has('🏠 家宽 IPv6'),false);
     assert.equal(g.has('ℹ️ 订阅信息'),withInfo);assert.equal(g.has('🧩 Extra 节点'),withExtra);
-    for(const name of ['♻️ 美国自动','♻️ 自动选择','🔯 故障转移','🏠 家宽稳定']){
+    for(const name of ['♻️ 美国自动','♻️ 自动选择','🔯 故障转移','🏠 家宽 IPv4']){
       assert(!g.get(name).proxies.some(n=>n.includes('Extra')));
       if(!surge){assert.equal(g.get(name).lazy,false);assert.equal(g.get(name).timeout,5000);}
     }

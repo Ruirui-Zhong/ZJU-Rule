@@ -10,7 +10,7 @@ assert.equal(g.get('🔗 家宽中转').type,'fallback');
 assert.equal(config.proxies.find(p=>p.name==='家宽 IPv4')['dialer-proxy'],'🔗 家宽中转');
 for(const name of ['家宽-v6','家宽 Hy2','HK[02]','US[14]-v6','Extra'])
   assert.equal(config.proxies.find(p=>p.name===name)['dialer-proxy'],undefined);
-assert.deepEqual(g.get('🏠 家宽稳定').proxies,['家宽-v6','家宽 IPv4','家宽 Hy2']);
+assert(!g.has('🏠 家宽稳定'));
 assert.equal(g.get('🤖 AI 平台').proxies[0],'🏠 家宽 IPv6');
 assert.equal(g.get('Claude').proxies[0],'🏠 家宽 IPv6');
 assert(!g.get('🏠 家宽 IPv6').proxies.some(name=>config.proxies.find(p=>p.name===name)?.['dialer-proxy']),

@@ -129,17 +129,15 @@ if (relayEnabled) {
   if (occupied.has(relayName)) throw new Error('家宽中转组名称与已有节点或分组冲突');
   for (const proxy of relayTargets) proxy['dialer-proxy'] = relayName;
 }
-const residentialGroups = new Set(['🏠 家宽节点', '🏠 家宽稳定', '🏠 家宽 IPv4', '🏠 家宽 IPv6', 'Claude']);
+const residentialGroups = new Set(['🏠 家宽节点', '🏠 家宽 IPv4', '🏠 家宽 IPv6', 'Claude']);
 const optionalNames = new Set(['ℹ️ 订阅信息', '🧩 Extra 节点', '♻️ 美国自动', '♻️ 自动选择', '🔯 故障转移',
-  '🏠 家宽节点', '🏠 家宽稳定', '🏠 家宽 IPv4', '🏠 家宽 IPv6', ...regionGroupNames]);
+  '🏠 家宽节点', '🏠 家宽 IPv4', '🏠 家宽 IPv6', ...regionGroupNames]);
 function candidates(name) {
   if (name === 'ℹ️ 订阅信息') return infoProxies;
   if (name === '🧩 Extra 节点') return proxies.filter(p => category(p) === 'extra');
   if (residentialGroups.has(name)) {
-    const pool = residential.filter(p =>
+    return residential.filter(p =>
       name === '🏠 家宽 IPv6' ? isIPv6Entry(p) : name === '🏠 家宽 IPv4' ? !isIPv6Entry(p) : true);
-    return profile === 'server' && name === '🏠 家宽稳定'
-      ? [...pool.filter(isIPv6Entry), ...pool.filter(p => !isIPv6Entry(p))] : pool;
   }
   if (name === '♻️ 美国自动') return high.filter(p => identifyRegion(p) === 'US');
   const region = regionDefinitions.find(region => region.name === name);
@@ -173,7 +171,6 @@ for (const definition of definitions) {
   if (definition.name === 'ℹ️ 订阅信息' && !infoProxies.length) continue;
   const group = {name: definition.name, type: definition.type, proxies: [...new Set(members)]};
   if (group.type !== 'select') Object.assign(group, {url: definition.url, interval: definition.interval, timeout: 5000, lazy: false});
-  if (profile === 'server' && group.name === '🏠 家宽稳定') group.interval = 60;
   if (group.type === 'url-test') group.tolerance = definition.tolerance;
   groups.push(group);
 }

@@ -125,10 +125,9 @@ class ScholarRules(unittest.TestCase):
         self.assertEqual(self.groups[SEARCH][0], '[]🚀 默认代理')
         self.assertIn('[]🏠 家宽节点', self.groups[SEARCH])
         for name in ['🏠 家宽节点']:
-            self.assertEqual(self.groups[name][0], '[]🏠 家宽稳定')
-            self.assertEqual(self.groups[name][1], '[]🏠 家宽 IPv6')
-            self.assertEqual(self.groups[name][2], '[]🏠 家宽 IPv4')
-            self.assertTrue(all(not x.startswith('[]') for x in self.groups[name][3:]))
+            self.assertEqual(self.groups[name][0], '[]🏠 家宽 IPv6')
+            self.assertEqual(self.groups[name][1], '[]🏠 家宽 IPv4')
+            self.assertTrue(all(not x.startswith('[]') for x in self.groups[name][2:]))
         self.assertEqual(self.groups[ACADEMIC][0], '[]🚀 默认代理')
 
     def test_shared_challenge_and_researchgate_preserved(self):
@@ -150,7 +149,7 @@ class ScholarRules(unittest.TestCase):
         self.assertEqual(list(self.groups), expected)
         self.assertEqual(list(self.groups).index('📄 arXiv'), list(self.groups).index('📚 学术资源') + 1)
         self.assertEqual(self.groups['🚀 默认代理'][0], '[]🔯 故障转移')
-        self.assertEqual(self.groups['🤖 AI 平台'][0], '[]🏠 家宽稳定')
+        self.assertEqual(self.groups['🤖 AI 平台'][0], '[]🏠 家宽节点')
         self.assertIn('[]♻️ 美国自动', self.groups['🤖 AI 平台'])
         self.assertNotIn('⚡ 高速节点', self.groups)
         self.assertIn('[]🇭🇰 香港节点', self.groups['🚀 默认代理'])

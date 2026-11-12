@@ -51,7 +51,7 @@ for(const file of ['zju-sub-store.js','zju-sub-store-surge.js']){
  for(const name of regions){assert(g.has(name));assert.equal(g.get(name).type,'url-test');assert(g.get('🚀 默认代理').proxies.includes(name));}
  assert(g.get('📄 arXiv').proxies.includes('DIRECT'));
  assert.equal(g.get('♻️ 美国自动').type,'url-test');
- assert.equal(g.get('🤖 AI 平台').proxies[0],'🏠 家宽稳定');
+ assert.equal(g.get('🤖 AI 平台').proxies[0],'🏠 家宽节点');
  assert.equal(g.get('📚 学术资源').proxies[0],'🚀 默认代理');
  if(config){
   const key=Object.keys(config['rule-providers']).find(k=>config['rule-providers'][k].url.endsWith('/Arxiv.list'));
