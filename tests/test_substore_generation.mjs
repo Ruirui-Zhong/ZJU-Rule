@@ -8,7 +8,7 @@ for(const target of ['ClashMeta','Surge']){
   const surge=target==='Surge';
   for(const withInfo of [true,false])for(const withExtra of [true,false]){
     const nodes=fixture.filter(n=>(withInfo||n.name!=='剩余流量')&&(withExtra||n._subName!=='Plinx-Extra'));
-    const {g,config,output}=await generate(target,nodes);
+    const {g,config,output}=await generate(target,nodes,{surgeVless:true});
     assert.equal(g.get('🚀 默认代理').proxies[0],'♻️ 自动选择');
     assert.equal(g.get('🤖 AI 平台').proxies[0],'🏠 家宽节点');
     assert.equal(g.get('Claude').proxies[0],'🏠 家宽 IPv4');

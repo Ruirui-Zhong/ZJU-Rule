@@ -26,7 +26,7 @@ for(const subset of [nodes.filter(p=>p._subName!=='Plinx-high'),nodes.filter(p=>
 const existing=await generate('ClashMeta',nodes.map(p=>p.name==='家宽 IPv4'?{...p,'dialer-proxy':'DIRECT'}:p),args);
 assert.equal(existing.config.proxies.find(p=>p.name==='家宽 IPv4')['dialer-proxy'],'DIRECT');
 assert(!existing.g.has('🔗 家宽中转'));
-const surge=await generate('Surge',nodes,args);
+const surge=await generate('Surge',nodes,{...args,surgeVless:true});
 assert.deepEqual(surge.g.get('🔗 家宽中转').proxies,['HK[02]','US[14]-v6']);
 const line=name=>surge.output.split('\n').find(line=>line.startsWith(name+' = vless,'));
 assert(line('家宽 IPv4').includes('underlying-proxy='));

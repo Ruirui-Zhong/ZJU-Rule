@@ -17,7 +17,8 @@ const unsupported=[v('家宽 XHTTP',{network:'xhttp'}),v('家宽 HTTPUpgrade',{n
  v('家宽 Vision plain',{flow:'xtls-rprx-vision'}),v('家宽 mux',{smux:{enabled:true}}),
  v('家宽 WS-upgrade',{network:'ws','ws-opts':{'v2ray-http-upgrade':true}}),
  v('家宽 grpc-mode',{network:'grpc',tls:true,'grpc-opts':{'grpc-mode':'unknown'}})];
-const out=await generate('Surge',[...supported,...unsupported],{profile:'home',residentialIPv4Relay:['HK[02]']});
+const native=(nodes,args={},...rest)=>generate('Surge',nodes,{surgeVless:true,...args},...rest);
+const out=await native([...supported,...unsupported],{profile:'home',residentialIPv4Relay:['HK[02]']});
 // Tokenize quoted commas independently of the generator and verify fields against Surge's manual.
 const lines=out.output.split('[Proxy]\n')[1].split('[Proxy Group]')[0].trim().split('\n');
 const parsed=new Map(lines.map(line=>{
@@ -48,10 +49,18 @@ assert.equal(parsed.get('家宽 gRPC REALITY')['reality-public-key'],key);
 assert.equal(parsed.get('家宽-v6').server,'2001:db8::1');
 assert(!('underlying-proxy'in parsed.get('家宽-v6')));
 assert.equal(out.g.get('🤖 AI 平台').proxies[0],'🏠 家宽 IPv4');
-assert.equal((await generate('Surge',[...supported,...unsupported],{profile:'home',residentialIPv4Relay:['HK[02]']},undefined,true)).output,out.output);
-await assert.rejects(()=>generate('Surge',unsupported),/没有当前客户端支持/);
+assert.equal((await native([...supported,...unsupported],{profile:'home',residentialIPv4Relay:['HK[02]']},undefined,true)).output,out.output);
+await assert.rejects(()=>native(unsupported),/没有当前客户端支持/);
 for(const bad of [v('bad',{uuid:''}),v('bad',{port:0}),v('bad',{...reality,'reality-opts':{}}),
  v('bad',{network:'ws','ws-opts':{path:'/ok\n[Rule]'}})])
- await assert.rejects(()=>generate('Surge',[bad]),/缺少|安全转换/);
-await assert.rejects(()=>generate('Surge',[v('bad',{'dialer-proxy':'missing'})]),/中转引用不存在/);
+ await assert.rejects(()=>native([bad]),/缺少|安全转换/);
+await assert.rejects(()=>native([v('bad',{'dialer-proxy':'missing'})]),/中转引用不存在/);
 console.log('Surge native VLESS: REALITY/Vision, TLS, WS, gRPC, unsupported filters, relay mapping and safe serialization passed');
+
+const compat=await generate('Surge',[...supported,...unsupported]);
+assert(!compat.output.split('[Proxy]')[1].split('[Proxy Group]')[0].includes('= vless,'));
+assert(!compat.g.has('🔗 家宽中转'));
+assert.equal(compat.output,(await generate('Surge',[...supported,...unsupported],{surgeVless:false})).output);
+await assert.rejects(()=>generate('Surge',[supported[0]]),/没有当前客户端支持/);
+await assert.rejects(()=>generate('Surge',supported,{surgeVless:'true'}),/必须是布尔值/);
+console.log('Surge compatibility: native VLESS disabled by default, explicit opt-in required, no dangling group references');

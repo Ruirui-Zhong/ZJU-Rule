@@ -159,8 +159,11 @@ function surgeVlessLine(proxy) {
 }
 
 const actualProxies = sourceProxies.filter(p => !notice.test(p.name ?? ''));
+if (target === 'Surge' && scriptArguments.surgeVless !== undefined && typeof scriptArguments.surgeVless !== 'boolean')
+  throw new Error('surgeVless 必须是布尔值；仅确认客户端支持原生 VLESS 后设为 true');
+const surgeVlessEnabled = target === 'Surge' && scriptArguments.surgeVless === true;
 const proxies = actualProxies.filter(p => target !== 'Surge' || p.type === 'hysteria2' ||
-  (p.type === 'vless' && !surgeVlessUnsupported(p))).map(p => ({...p}));
+  (surgeVlessEnabled && p.type === 'vless' && !surgeVlessUnsupported(p))).map(p => ({...p}));
 if (!proxies.length) throw new Error('订阅中没有当前客户端支持的实际节点；请保留上次有效配置');
 const infoProxies = sourceProxies.filter(p => notice.test(p.name ?? '')).map(p => ({...p, name: `[${p._subName ?? '未知订阅'}] ${p.name}`}));
 const occupied = new Set(['DIRECT', 'REJECT', ...definedNames]);
@@ -335,7 +338,8 @@ if (target !== 'Surge') {
     (g.type === 'select' ? '' : `, interval=${g.interval}`+(g.type === 'url-test' ? `, tolerance=${g.tolerance}` : '')));
   const ruleLines = rules.map(rule => rule.startsWith('RULE-SET,')
     ? `RULE-SET,${providers[rule.split(',')[1]].url},${rule.split(',')[2]}` : rule.replace(/^MATCH,/, 'FINAL,'));
-  $content = ['# ZJU Rule — Surge (VLESS + Hysteria2; Mac 6.12+ / iOS 6+)',
+  $content = [surgeVlessEnabled ? '# ZJU Rule — Surge (VLESS + Hysteria2; Mac 6.12+ / iOS 6+)'
+    : '# ZJU Rule — Surge (Hysteria2 compatibility; native VLESS disabled)',
     '# Unsupported nodes omitted: '+(actualProxies.length-proxies.length), '[General]', 'loglevel = notify',
     'proxy-test-url = http://www.gstatic.com/generate_204', 'test-timeout = 5', '', '[Proxy]',
     ...proxyLines, ...infoProxies.map(p => `${p.name} = direct`), '', '[Proxy Group]', ...groupLines,

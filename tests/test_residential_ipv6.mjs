@@ -35,9 +35,9 @@ const utils = {
 for (const filename of ['zju-sub-store.js', 'zju-sub-store-surge.js']) {
   const surge = filename.endsWith('surge.js');
   const script = fs.readFileSync(path.join(root, 'Clash/config', filename), 'utf8');
-  const generate = new AsyncFunction('$content', '$files', 'produceArtifact', 'ProxyUtils', script + '\nreturn $content;');
+  const generate = new AsyncFunction('$content', '$files', 'produceArtifact', 'ProxyUtils', '$arguments', script + '\nreturn $content;');
   const run = async (nodes, source = ini) => {
-    const output = await generate(source, [], async () => structuredClone(nodes), utils);
+    const output = await generate(source, [], async () => structuredClone(nodes), utils, {surgeVless:true});
     const config = surge ? null : JSON.parse(output);
     const groups = config?.['proxy-groups'] ?? output.split('[Proxy Group]\n')[1].split('[Rule]')[0].trim().split('\n')
       .map(line => {

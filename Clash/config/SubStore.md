@@ -17,7 +17,7 @@
    https://raw.githubusercontent.com/Ruirui-Zhong/ZJU-Rule/main/Clash/config/zju-sub-store-loader.js
    ```
 
-   Surge 使用 `zju-sub-store-loader-surge.js`，输出 Hysteria2 与原生 VLESS；VLESS 要求 Surge Mac 6.12+ / iOS 6+。
+   Surge 使用 `zju-sub-store-loader-surge.js`，默认输出 Hysteria2 兼容配置。只有确认客户端支持后，才通过 `surgeVless: true` 开启原生 VLESS；官方注明要求 Surge Mac 6.12+ / iOS 6+。
 4. 预览并保存，再将完整配置的下载链接导入客户端。一次下载的配置包同时包含 INI 和生成器，因此不会把新 INI 与旧生成脚本混用。加载器的协议为 `schema: 1`。
 
 旧的 `ZJU.ini` + `zju-sub-store.js` 接入方式继续兼容，但推荐迁移到原子包。更改源码后运行 `node scripts/build_substore.mjs`，同时更新生成的脚本与配置包。
@@ -36,6 +36,7 @@
 | `layout: "full"` | 独立展示微软、OneDrive、苹果、游戏、YouTube、Netflix、巴哈姆特等控制组 |
 | `defaultSelections` | 组名称到成员名称的映射，覆盖该设备默认项；已消失的个人节点选择会被忽略 |
 | `preferredNodesByRegion` | 地区代码到首选节点名称数组的映射，示例见 `node-preferences.example.json` |
+| `surgeVless` | 默认 `false`；仅确认 Surge 内核支持原生 VLESS 后设为布尔值 `true`。Mac 6.10 等旧版本必须关闭 |
 | `residentialIPv4Relay` | 可选的高速节点名称数组；为家宽 IPv4 VLESS 入口启用链式中转，Clash/Mihomo 使用 `dialer-proxy`，Surge 使用 `underlying-proxy` |
 | `collectionName`、`sourceCategory` | 适配自己的组合订阅和来源名称 |
 
@@ -61,12 +62,15 @@
 保留家宽 IPv6 直连，避免把整个家宽组与高速组互相引用；Hy2 等 UDP 家宽协议保持原配置。
 服务器默认选中 `🏠 家宽 IPv6`，仅在该组内回退；IPv6 入口全部失效时不会自动使用中转 IPv4。需要时手动将 AI 和 Claude 改选 `🏠 家宽 IPv4`。
 默认不启用中转。Mac 家用网络同样连不上家宽 IPv4 时，可在 Clash 或 Surge 文件使用 `profile: "home"` 并启用此参数，不依赖家庭 IPv6。
-Surge 会先排除不支持的节点，再建立中转组；上例中的 XHTTP 中转不会进入 Surge，普通 TCP VLESS 中转仍可使用。
+Surge 仅在显式启用原生 VLESS 后支持这类家宽 VLESS 中转；会先排除不支持的节点，再建立中转组。上例中的 XHTTP 中转不会进入 Surge，普通 TCP VLESS 中转可在兼容内核上使用。
 节点名称应与订阅一致；某个来源缺失时不生成无效引用。名称相同服务器上的两个中转协议仍可能同时故障。
 中转会增加时延，并同时消耗高速和家宽两端流量；它绕过原入口路径故障，不代表原路径已经恢复。
 用法参考 [Mihomo 链式代理文档](https://wiki.metacubex.one/config/proxies/dialer-proxy/)。
 
 ## Surge 原生 VLESS
+
+默认关闭，避免旧内核导入时报 `Unknown proxy type: vless`。**Surge Mac 6.10.0（12500）不支持原生 VLESS**，应保留兼容配置。
+官方注明 Mac 6.12+ / iOS 6+ 支持；确认实际版本和内核已支持后，才在该设备参数中加入 `"surgeVless": true`。生成器无法从服务器可靠识别 Mac 内核版本，不根据订阅节点类型自动开启。
 
 按 [Surge 官方 VLESS 文档](https://manual.nssurge.com/policies/vless.html) 转换 RAW/TCP（无 TLS、TLS、REALITY）、WebSocket（无 TLS 或 TLS）与 gRPC（TLS 或 REALITY）。Vision 只用于 TCP + TLS/REALITY。
 保留用户 ID、SNI、REALITY 公钥和 short-id、Vision flow、ALPN、WebSocket 路径/请求头与 gRPC 参数；使用原生协议，无需外部内核。

@@ -29,7 +29,7 @@ for(const file of ['zju-sub-store.js','zju-sub-store-surge.js']){
  const script=fs.readFileSync(path.join(root,'Clash/config',file),'utf8');
  const fn=new AsyncFunction('$content','$files','produceArtifact','ProxyUtils','$arguments',script+'\nreturn $content;');
  const run=async(nodes=fixture,args={},source=ini)=>{
-  const output=await fn(source,[],async()=>structuredClone(nodes),utils,args);
+  const output=await fn(source,[],async()=>structuredClone(nodes),utils,{surgeVless:true,...args});
   const config=file.endsWith('surge.js')?null:JSON.parse(output);
   const groups=config?.['proxy-groups']??parseSurge(output);
   const g=new Map(groups.map(x=>[x.name,x]));
