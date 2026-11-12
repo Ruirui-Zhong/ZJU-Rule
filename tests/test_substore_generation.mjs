@@ -9,7 +9,7 @@ for(const target of ['ClashMeta','Surge']){
   for(const withInfo of [true,false])for(const withExtra of [true,false]){
     const nodes=fixture.filter(n=>(withInfo||n.name!=='剩余流量')&&(withExtra||n._subName!=='Plinx-Extra'));
     const {g,config,output}=await generate(target,nodes);
-    assert.equal(g.get('🚀 默认代理').proxies[0],'🔯 故障转移');
+    assert.equal(g.get('🚀 默认代理').proxies[0],'♻️ 自动选择');
     assert.equal(g.get('🤖 AI 平台').proxies[0],'🏠 家宽节点');
     assert.equal(g.get('Claude').proxies[0],'🏠 家宽 IPv4');
     assert.equal(g.get('📚 学术资源').proxies[0],'🚀 默认代理');

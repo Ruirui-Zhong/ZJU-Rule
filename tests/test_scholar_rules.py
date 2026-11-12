@@ -148,7 +148,7 @@ class ScholarRules(unittest.TestCase):
         expected = json.loads((ROOT / 'tests/fixtures/group_order.json').read_text())
         self.assertEqual(list(self.groups), expected)
         self.assertEqual(list(self.groups).index('📄 arXiv'), list(self.groups).index('📚 学术资源') + 1)
-        self.assertEqual(self.groups['🚀 默认代理'][0], '[]🔯 故障转移')
+        self.assertEqual(self.groups['🚀 默认代理'][0], '[]♻️ 自动选择')
         self.assertEqual(self.groups['🤖 AI 平台'][0], '[]🏠 家宽节点')
         self.assertIn('[]♻️ 美国自动', self.groups['🤖 AI 平台'])
         self.assertNotIn('⚡ 高速节点', self.groups)
