@@ -1,0 +1,32 @@
+name: Refresh upstream base rules
+on:
+  schedule:
+    - cron: '47 2 * * *'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: rule-maintenance
+  cancel-in-progress: false
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      - run: python3 scripts/sync_upstream_rules.py
+      - run: node scripts/validate.mjs
+      - name: Commit validated rule data
+        run: |
+          git add Clash/ config/upstream-lock.json
+          if git diff --cached --quiet; then exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'Refresh validated upstream rule data'
+          git pull --rebase
+          git push

@@ -1,7 +1,8 @@
 {
+  "profile": "server",
+  "layout": "compact",
   "preferredNodesByRegion": {
-    "HK": [
-      "你的香港节点名称"
-    ]
-  }
+    "HK": ["你的香港节点名称"]
+  },
+  "defaultSelections": {}
 }

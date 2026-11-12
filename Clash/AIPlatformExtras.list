@@ -1,0 +1,26 @@
+# AI 平台专属域名；公共验证单独分流，通用认证/支付/遥测不整体归入 AI。
+DOMAIN-KEYWORD,openai
+DOMAIN,gemini.google.com
+DOMAIN-SUFFIX,chatgpt.com
+DOMAIN-SUFFIX,oaistatic.com
+DOMAIN-SUFFIX,oaiusercontent.com
+DOMAIN-SUFFIX,openai.com
+DOMAIN-SUFFIX,openaiapi-site.azureedge.net
+DOMAIN-SUFFIX,bard.google.com
+DOMAIN-SUFFIX,coze.com
+DOMAIN-SUFFIX,forefront.ai
+DOMAIN-SUFFIX,gemini.google.com
+DOMAIN-SUFFIX,poe.com
+DOMAIN-SUFFIX,poecdn.net
+DOMAIN,bard.google.com
+DOMAIN,generativelanguage.googleapis.com
+
+# Explicit service endpoints not shared authentication/CDN domains.
+DOMAIN-SUFFIX,generativeai.google
+DOMAIN-SUFFIX,aistudio.google.com
+DOMAIN-SUFFIX,ai.google.dev
+DOMAIN-SUFFIX,githubcopilot.com
+DOMAIN-SUFFIX,grok.com
+DOMAIN-SUFFIX,x.ai
+DOMAIN-SUFFIX,notebooklm.google
+DOMAIN-SUFFIX,notebooklm.google.com

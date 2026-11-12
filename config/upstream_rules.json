@@ -1,0 +1,51 @@
+{
+  "repository": "SubConv/ZJU-Rule",
+  "files": [
+    "Clash/Apple.list",
+    "Clash/BanAD.list",
+    "Clash/BanEasyList.list",
+    "Clash/BanEasyListChina.list",
+    "Clash/BanEasyPrivacy.list",
+    "Clash/BanProgramAD.list",
+    "Clash/Bing.list",
+    "Clash/ChinaCompanyIp.list",
+    "Clash/ChinaDomain.list",
+    "Clash/ChinaMedia.list",
+    "Clash/Download.list",
+    "Clash/GoogleCN.list",
+    "Clash/LocalAreaNetwork.list",
+    "Clash/Microsoft.list",
+    "Clash/OneDrive.list",
+    "Clash/ProxyGFWlist.list",
+    "Clash/ProxyMedia.list",
+    "Clash/Ruleset/AI.list",
+    "Clash/Ruleset/Adobe.list",
+    "Clash/Ruleset/Bahamut.list",
+    "Clash/Ruleset/Bilibili.list",
+    "Clash/Ruleset/BilibiliHMT.list",
+    "Clash/Ruleset/Epic.list",
+    "Clash/Ruleset/GoogleFCM.list",
+    "Clash/Ruleset/NetEaseMusic.list",
+    "Clash/Ruleset/Netflix.list",
+    "Clash/Ruleset/Nintendo.list",
+    "Clash/Ruleset/OpenAi.list",
+    "Clash/Ruleset/Origin.list",
+    "Clash/Ruleset/PrivateTracker.list",
+    "Clash/Ruleset/Scholar.list",
+    "Clash/Ruleset/Sony.list",
+    "Clash/Ruleset/Steam.list",
+    "Clash/Ruleset/SteamCN.list",
+    "Clash/Ruleset/YouTube.list",
+    "Clash/Telegram.list",
+    "Clash/UnBan.list",
+    "Clash/ZJU-IP.list",
+    "Clash/ZJU-More-Scholar.list",
+    "Clash/ZJU-Rule.list"
+  ],
+  "additions": {
+    "Clash/GoogleCN.list": [
+      "DOMAIN-SUFFIX,imap.gmail.com",
+      "DOMAIN-SUFFIX,smtp.gmail.com"
+    ]
+  }
+}

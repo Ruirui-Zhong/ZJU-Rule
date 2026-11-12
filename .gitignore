@@ -35,3 +35,7 @@ build/
 
 # Personal node priorities are local only.
 /Clash/config/node-preferences.local.json
+
+# Python validation cache
+__pycache__/
+*.pyc

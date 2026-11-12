@@ -13,7 +13,7 @@
   },
   {
     "source": "https://raw.githubusercontent.com/Ruirui-Zhong/ZJU-Rule/main/Clash/SharedVerification.list",
-    "default": "DIRECT"
+    "default": "PROXY"
   },
   {
     "source": "https://raw.githubusercontent.com/Ruirui-Zhong/ZJU-Rule/main/Clash/Arxiv.list",
@@ -41,19 +41,19 @@
   },
   {
     "source": "https://raw.githubusercontent.com/Ruirui-Zhong/ZJU-Rule/main/Clash/AcademicSupplement.list",
-    "default": "DIRECT"
+    "default": "PROXY"
   },
   {
     "source": "https://raw.githubusercontent.com/Ruirui-Zhong/ZJU-Rule/main/Clash/CommunityAcademic.list",
-    "default": "DIRECT"
+    "default": "PROXY"
   },
   {
     "source": "https://raw.githubusercontent.com/Ruirui-Zhong/ZJU-Rule/main/Clash/ZJU-More-Scholar.list",
-    "default": "DIRECT"
+    "default": "PROXY"
   },
   {
     "source": "https://raw.githubusercontent.com/Ruirui-Zhong/ZJU-Rule/main/Clash/Ruleset/Scholar.list",
-    "default": "DIRECT"
+    "default": "PROXY"
   },
   {
     "source": "https://raw.githubusercontent.com/Ruirui-Zhong/ZJU-Rule/main/Clash/Claude.list",

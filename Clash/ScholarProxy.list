@@ -1,5 +1,5 @@
 # 谷歌学术主站、地区入口和专用资源。优先于通用 Google/GFW 规则。
-# 使用独立学术搜索策略，默认家宽，不依赖“节点选择”的当前选择。
+# 使用独立学术搜索策略，默认跟随默认代理，可独立选择家宽或校园出口。
 DOMAIN-SUFFIX,scholar.google.com
 DOMAIN-SUFFIX,scholar.google.com.hk
 DOMAIN-SUFFIX,scholar.google.com.cn

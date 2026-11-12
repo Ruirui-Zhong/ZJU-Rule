@@ -1,6 +1,4 @@
 payload:
-  # 内容：Steam
-  # 数量：18条
   - DOMAIN,steambroadcast.akamaized.net
   - DOMAIN,steamcommunity-a.akamaihd.net
   - DOMAIN,steampipe.akamaized.net

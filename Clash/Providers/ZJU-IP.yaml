@@ -1,5 +1,4 @@
 payload:
-  # 校内 IP
   - IP-CIDR,10.0.0.0/8
   - IP-CIDR,58.196.192.0/19,no-resolve
   - IP-CIDR,58.196.224.0/20,no-resolve

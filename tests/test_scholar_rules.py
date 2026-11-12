@@ -21,12 +21,15 @@ def matches(rule, host):
 class ScholarRules(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.sources, cls.groups = [], {}
+        cls.sources, cls.groups, cls.aliases = [], {}, {}
         for line in (ROOT / 'Clash/config/ZJU.ini').read_text().splitlines():
             if line.startswith('ruleset=') and '/main/' in line:
                 policy, source = line[8:].split(',', 1)
                 path = ROOT / source.split('/main/', 1)[1]
                 cls.sources.append((policy, path, path.read_text().splitlines()))
+            elif line.startswith('compact_group='):
+                name, target = line.split('=', 1)[1].split('`')
+                cls.aliases[name] = target
             elif line.startswith('custom_proxy_group='):
                 name, kind, *members = line.split('=', 1)[1].split('`')
                 if name in cls.groups:
@@ -37,7 +40,7 @@ class ScholarRules(unittest.TestCase):
         for policy, path, rules in self.sources:
             for rule in rules:
                 if matches(rule, host):
-                    return policy
+                    return self.aliases.get(policy, policy)
         return None
 
     def test_submission_platforms_and_boundaries(self):
@@ -76,6 +79,23 @@ class ScholarRules(unittest.TestCase):
         self.assertFalse(any(matches(rule, host) for rule in ai
                              for host in ['claude.ai', 'api.anthropic.com']))
 
+    def test_restored_ai_service_coverage(self):
+        for host in ['copilot.microsoft.com', 'copilot.cloud.microsoft', 'cursor.com',
+                     'cursor.sh', 'api.groq.com', 'perplexity.ai', 'sora.com',
+                     'notebooklm.google.com', 'aistudio.google.com', 'x.ai', 'mistral.ai']:
+            with self.subTest(host=host):
+                self.assertEqual(self.first_policy(host), '🤖 AI 平台')
+        self.assertNotEqual(self.first_policy('cursor.com.example.org'), '🤖 AI 平台')
+        self.assertNotEqual(self.first_policy('auth0.com'), '🤖 AI 平台')
+
+    def test_institution_and_general_academic_separation(self):
+        for host in ['acm.org', 'jstor.org', 'webofscience.com']:
+            self.assertEqual(self.first_policy(host), '📚 机构认证')
+        for host in ['ieee.org', 'nature.com', 'sciencedirect.com']:
+            self.assertEqual(self.first_policy(host), ACADEMIC)
+        self.assertEqual(self.groups['📚 机构认证'][0], '[]✔ ZJU内网')
+        self.assertEqual(self.groups['🔐 公共验证'][0], '[]🤖 AI 平台')
+
     def test_google_scholar_and_dependencies(self):
         rules = (ROOT / 'Clash/ScholarProxy.list').read_text().splitlines()
         for rule in rules:
@@ -97,7 +117,9 @@ class ScholarRules(unittest.TestCase):
                   if x.startswith('DOMAIN-SUFFIX,')]
         for host in hosts:
             with self.subTest(host=host):
-                self.assertEqual(self.first_policy(host), ACADEMIC)
+                institution = (ROOT / 'Clash/AcademicPublishers.list').read_text().splitlines()
+                expected = '📚 机构认证' if any(matches(rule, host) for rule in institution) else ACADEMIC
+                self.assertEqual(self.first_policy(host), expected)
 
     def test_proxy_search_follows_default_proxy(self):
         self.assertEqual(self.groups[SEARCH][0], '[]🚀 默认代理')
@@ -105,8 +127,9 @@ class ScholarRules(unittest.TestCase):
         for name in ['🏠 家宽节点']:
             self.assertEqual(self.groups[name][0], '[]🏠 家宽稳定')
             self.assertEqual(self.groups[name][1], '[]🏠 家宽 IPv6')
-            self.assertTrue(all(not x.startswith('[]') for x in self.groups[name][2:]))
-        self.assertEqual(self.groups[ACADEMIC][0], '[]DIRECT')
+            self.assertEqual(self.groups[name][2], '[]🏠 家宽 IPv4')
+            self.assertTrue(all(not x.startswith('[]') for x in self.groups[name][3:]))
+        self.assertEqual(self.groups[ACADEMIC][0], '[]🚀 默认代理')
 
     def test_shared_challenge_and_researchgate_preserved(self):
         self.assertEqual(self.first_policy('challenges.cloudflare.com'), '🔐 公共验证')
@@ -126,7 +149,7 @@ class ScholarRules(unittest.TestCase):
         expected = json.loads((ROOT / 'tests/fixtures/group_order.json').read_text())
         self.assertEqual(list(self.groups), expected)
         self.assertEqual(list(self.groups).index('📄 arXiv'), list(self.groups).index('📚 学术资源') + 1)
-        self.assertEqual(self.groups['🚀 默认代理'][0], '[]♻️ 美国自动')
+        self.assertEqual(self.groups['🚀 默认代理'][0], '[]🔯 故障转移')
         self.assertEqual(self.groups['🤖 AI 平台'][0], '[]🏠 家宽稳定')
         self.assertIn('[]♻️ 美国自动', self.groups['🤖 AI 平台'])
         self.assertNotIn('⚡ 高速节点', self.groups)
@@ -153,7 +176,7 @@ class ScholarRules(unittest.TestCase):
                 expected = '🛡️ 隐私防护' if path.name == 'BanEasyPrivacy.list' else '🛑 广告拦截'
                 self.assertEqual(policy, expected)
 
-    def test_all_sources_order_and_default_directions_preserved(self):
+    def test_source_order_and_reviewed_default_directions(self):
         baseline = json.loads((ROOT / 'tests/fixtures/routing_defaults.json').read_text())
         def resolve(policy):
             if policy in ['DIRECT', 'REJECT']:

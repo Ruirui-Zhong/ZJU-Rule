@@ -1,7 +1,4 @@
 payload:
-  # ZJU 部分学术资源
-  # 此处仅添加既能通过统一身份认证访问又能通过 IP 访问的资源
-  # 不可与 ZJU.list 中的学术资源重复
   - DOMAIN-SUFFIX,canvas-user-content.com
   - DOMAIN-KEYWORD,illinois
   - DOMAIN-SUFFIX,iclicker.com
@@ -21,5 +18,3 @@ payload:
   - DOMAIN-SUFFIX,ascelibrary.org
   - DOMAIN-SUFFIX,scitation.org
   - DOMAIN-SUFFIX,wiley.com
-  - DOMAIN-SUFFIX,asme.org
-  - DOMAIN-SUFFIX,acs.org

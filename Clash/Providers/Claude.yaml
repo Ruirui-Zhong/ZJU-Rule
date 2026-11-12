@@ -1,5 +1,5 @@
 payload:
-  # Claude 专属域名，使用独立 Claude 策略组。
   - DOMAIN-SUFFIX,claude.ai
   - DOMAIN-SUFFIX,claude.com
   - DOMAIN-SUFFIX,anthropic.com
+  - DOMAIN-SUFFIX,claudeusercontent.com

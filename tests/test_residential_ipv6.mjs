@@ -63,12 +63,12 @@ for (const filename of ['zju-sub-store.js', 'zju-sub-store-surge.js']) {
   assert.equal(result.g(groupName).type, 'fallback');
   for (const parent of ['🚀 默认代理', '🤖 AI 平台', '🏠 家宽节点', 'Claude'])
     assert(result.g(parent).proxies.includes(groupName), parent+' cannot select IPv6 fallback');
-  assert.equal(result.g('🚀 默认代理').proxies[0], '♻️ 美国自动');
+  assert.equal(result.g('🚀 默认代理').proxies[0], '🔯 故障转移');
   assert.equal(result.g('🤖 AI 平台').proxies[0], '🏠 家宽稳定');
   assert.equal(result.g('🏠 家宽节点').proxies[0], '🏠 家宽稳定');
-  assert.equal(result.g('Claude').proxies[0], '家宽 IPv4');
+  assert.equal(result.g('Claude').proxies[0], '🏠 家宽稳定');
   const order = result.groups.map(g => g.name);
-  assert.equal(order.indexOf(groupName), order.indexOf('🏠 家宽稳定') + 1);
+  assert.equal(order.indexOf(groupName), order.indexOf('🏠 家宽 IPv4') + 1);
   if (surge) {
     assert(result.output.includes(`${groupName} = fallback, ${expected.join(', ')}, interval=60`));
     assert(result.output.includes('test-timeout = 5'));

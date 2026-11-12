@@ -1,0 +1,199 @@
+// Shared generator. Edit ZJU.ini for policies; regenerate standalone scripts/bundle with scripts/build_substore.mjs.
+const target = $target;
+const scriptArguments = typeof $arguments === 'object' && $arguments ? $arguments : {};
+const collectionName = scriptArguments.collectionName ?? 'Plinx';
+const sourceCategory = { 'Plinx-home': 'residential', 'Plinx-high': 'high', 'Plinx-Extra': 'extra', ...(scriptArguments.sourceCategory ?? {}) };
+const ownRoot = 'https://raw.githubusercontent.com/Ruirui-Zhong/ZJU-Rule/main/';
+const ini = $content ?? $files?.[0];
+if (typeof ini !== 'string' || !ini.includes('[custom]')) throw new Error('文件来源必须是 ZJU.ini 或原子配置包。');
+if (!['compact', 'full'].includes(scriptArguments.layout ?? 'compact')) throw new Error('layout 必须是 compact 或 full');
+const entries = [];
+let section = '';
+for (const raw of ini.replace(/^\uFEFF/, '').split(/\r?\n/)) {
+  const line = raw.trim();
+  if (!line || /^[;#]/.test(line)) continue;
+  if (line.startsWith('[')) { section = line; continue; }
+  if (section !== '[custom]') continue;
+  const at = line.indexOf('=');
+  if (at < 0) throw new Error('INI 存在无法解析的行');
+  entries.push([line.slice(0, at).trim(), line.slice(at + 1).trim()]);
+}
+// @REGION_DEFINITIONS@
+const definitions = entries.filter(([key]) => key === 'custom_proxy_group').map(([, value]) => {
+  const [name, type, ...selectors] = value.split('`');
+  if (!name || !['select', 'url-test', 'fallback', 'load-balance'].includes(type)) throw new Error(`不支持的策略组：${name}`);
+  const urlIndex = selectors.findIndex(value => /^https?:\/\//.test(value));
+  const health = urlIndex < 0 ? [] : selectors.slice(urlIndex);
+  const [interval, , tolerance] = (health[1] ?? '300,,100').split(',');
+  return {name, type, selectors: urlIndex < 0 ? selectors : selectors.slice(0, urlIndex),
+    url: health[0] ?? 'http://www.gstatic.com/generate_204',
+    interval: Number(interval || 300), tolerance: Number(tolerance || 100)};
+});
+const definedNames = new Set(definitions.map(g => g.name));
+if (definedNames.size !== definitions.length) throw new Error('策略组名称重复');
+const aliases = new Map((scriptArguments.layout ?? 'compact') === 'compact'
+  ? entries.filter(([key]) => key === 'compact_group').map(([, value]) => value.split('`')) : []);
+function policyAlias(name, seen = new Set()) {
+  if (seen.has(name)) throw new Error(`策略组循环引用：${name}`);
+  return aliases.has(name) ? policyAlias(aliases.get(name), new Set([...seen, name])) : name;
+}
+for (const name of aliases.keys()) if (!definedNames.has(policyAlias(name))) throw new Error(`别名引用不存在：${name}`);
+const sourceProxies = await produceArtifact({type: 'collection', name: collectionName, platform: 'ClashMeta',
+  produceType: 'internal', ignoreFailedRemoteSub: 'fallbackQuiet'});
+if (!Array.isArray(sourceProxies)) throw new Error('组合订阅没有返回节点数组');
+const notice = /通知|公告|剩余|重置|到期|流量|套餐|更新订阅|无节点可用/;
+const proxies = sourceProxies.filter(p => !notice.test(p.name ?? '') && (target !== 'Surge' || p.type === 'hysteria2')).map(p => ({...p}));
+if (!proxies.length) throw new Error('订阅中没有当前客户端支持的实际节点；请保留上次有效配置');
+const infoProxies = sourceProxies.filter(p => notice.test(p.name ?? '')).map(p => ({...p, name: `[${p._subName ?? '未知订阅'}] ${p.name}`}));
+const occupied = new Set(['DIRECT', 'REJECT', ...definedNames]);
+for (const proxy of [...proxies, ...infoProxies]) {
+  if (!proxy.name) throw new Error('订阅节点缺少名称');
+  if (target === 'Surge') proxy.name = proxy.name.replace(/[=,\r\n"]/g, ' ').trim();
+  if (!proxy.name) throw new Error('节点名称无法用于当前客户端');
+  const original = proxy.name;
+  let suffix = 2;
+  while (occupied.has(proxy.name)) proxy.name = `${original} (${suffix++})`;
+  occupied.add(proxy.name);
+}
+const category = proxy => sourceCategory[proxy._subName] ?? 'other';
+const isIPv6Entry = proxy => {
+  const server = String(proxy.server ?? '').replace(/^\[|\]$/g, '');
+  return /(?:^|[^A-Za-z0-9])(?:ipv6|v6)(?=$|[^A-Za-z0-9])/i.test(proxy.name) ||
+    (server.includes(':') && /^[0-9a-f:.]+$/i.test(server));
+};
+const normal = proxies.filter(p => category(p) !== 'extra');
+const high = proxies.filter(p => category(p) === 'high');
+const residential = proxies.filter(p => category(p) === 'residential');
+const residentialGroups = new Set(['🏠 家宽节点', '🏠 家宽稳定', '🏠 家宽 IPv4', '🏠 家宽 IPv6', 'Claude']);
+const optionalNames = new Set(['ℹ️ 订阅信息', '🧩 Extra 节点', '♻️ 美国自动', '♻️ 自动选择', '🔯 故障转移',
+  '🏠 家宽节点', '🏠 家宽稳定', '🏠 家宽 IPv4', '🏠 家宽 IPv6', ...regionGroupNames]);
+function candidates(name) {
+  if (name === 'ℹ️ 订阅信息') return infoProxies;
+  if (name === '🧩 Extra 节点') return proxies.filter(p => category(p) === 'extra');
+  if (residentialGroups.has(name)) return residential.filter(p =>
+    name === '🏠 家宽 IPv6' ? isIPv6Entry(p) : name === '🏠 家宽 IPv4' ? !isIPv6Entry(p) : true);
+  if (name === '♻️ 美国自动') return high.filter(p => identifyRegion(p) === 'US');
+  const region = regionDefinitions.find(region => region.name === name);
+  if (region) return high.filter(p => identifyRegion(p) === region.code);
+  if (name === otherRegionName) return high.filter(p => identifyRegion(p) === 'OTHER');
+  if (['♻️ 自动选择', '🔯 故障转移'].includes(name)) return high;
+  return normal;
+}
+const groups = [];
+for (const definition of definitions) {
+  if (aliases.has(definition.name)) continue;
+  const members = [];
+  const pool = candidates(definition.name);
+  const region = regionDefinitions.find(region => region.name === definition.name);
+  for (const selector of definition.selectors) {
+    if (selector.startsWith('[]')) {
+      const member = policyAlias(selector.slice(2));
+      if (!definedNames.has(member) && !['DIRECT', 'REJECT'].includes(member)) throw new Error(`应用策略组引用不存在：${member}`);
+      members.push(member);
+    } else {
+      // Source/region/entry constraints are enforced before subscription-name regexes.
+      const typed = region || definition.name === otherRegionName || definition.name === '♻️ 美国自动' ||
+        definition.name === '🏠 家宽 IPv6' || definition.name === '🏠 家宽 IPv4';
+      const pattern = typed ? null : new RegExp(selector);
+      const selected = pool.filter(p => !pattern || pattern.test(p.name));
+      members.push(...(region ? prioritizeNodes(selected, region.code) : selected.map(p => p.name)));
+    }
+  }
+  if (definition.name === 'ℹ️ 订阅信息' && !infoProxies.length) continue;
+  const group = {name: definition.name, type: definition.type, proxies: [...new Set(members)]};
+  if (group.type !== 'select') Object.assign(group, {url: definition.url, interval: definition.interval, timeout: 5000, lazy: false});
+  if (group.type === 'url-test') group.tolerance = definition.tolerance;
+  groups.push(group);
+}
+function visit(name, stack = new Set()) {
+  if (stack.has(name)) throw new Error(`策略组循环引用：${name}`);
+  const group = groups.find(g => g.name === name);
+  if (group) for (const member of group.proxies) visit(member, new Set([...stack, name]));
+}
+for (const group of groups) visit(group.name);
+// Missing providers remove only empty optional groups, never the complete subscription.
+const removed = new Set();
+let changed = true;
+while (changed) {
+  changed = false;
+  for (const group of groups) {
+    if (removed.has(group.name)) continue;
+    group.proxies = group.proxies.filter(member => !removed.has(member) &&
+      !(definedNames.has(member) && !groups.some(g => g.name === member)));
+    if (!group.proxies.length && optionalNames.has(group.name)) {removed.add(group.name); changed = true;}
+  }
+}
+const outputGroups = groups.filter(g => !removed.has(g.name));
+for (const group of outputGroups) {
+  group.proxies = group.proxies.filter(m => !removed.has(m));
+  if (!group.proxies.length) group.proxies = ['REJECT'];
+}
+const profile = scriptArguments.profile ?? 'default';
+const profileEntries = entries.filter(([key]) => key === 'profile_default').map(([, value]) => value.split('`'));
+if (!['default', ...profileEntries.map(parts => parts[0])].includes(profile)) throw new Error('未知设备预设：'+profile);
+for (const [preset, name, ...choices] of profileEntries) {
+  if (preset !== profile) continue;
+  const group = outputGroups.find(g => g.name === policyAlias(name));
+  const preferred = group && choices.map(choice => policyAlias(choice)).find(choice => group.proxies.includes(choice));
+  if (group?.type === 'select' && preferred) group.proxies = [preferred, ...group.proxies.filter(m => m !== preferred)];
+}
+const selections = scriptArguments.defaultSelections ?? {};
+if (!selections || typeof selections !== 'object' || Array.isArray(selections) || Object.values(selections).some(v => typeof v !== 'string'))
+  throw new Error('defaultSelections 必须是组名称到成员名称的映射');
+for (const [name, choice] of Object.entries(selections)) {
+  const group = outputGroups.find(g => g.name === policyAlias(name));
+  const member = policyAlias(choice);
+  // Ignore stale personal choices when a provider/node was removed; retain a usable INI default.
+  if (group?.type === 'select' && group.proxies.includes(member)) group.proxies = [member, ...group.proxies.filter(m => m !== member)];
+}
+const validNames = new Set(['DIRECT', 'REJECT', ...proxies.map(p => p.name), ...infoProxies.map(p => p.name), ...outputGroups.map(g => g.name)]);
+for (const group of outputGroups) for (const member of group.proxies) if (!validNames.has(member)) throw new Error(`输出策略引用不存在：${member}`);
+const policyNames = new Set(['DIRECT', 'REJECT', ...outputGroups.map(g => g.name)]);
+const providers = {}, rules = [];
+function stableID(source) {
+  // Stable across INI reordering, independent of runtime cache refresh timing.
+  let hash = 2166136261;
+  for (let i = 0; i < source.length; i++) hash = Math.imul(hash ^ source.charCodeAt(i), 16777619) >>> 0;
+  const label = source.split('/').pop().replace(/\.list$/, '').replace(/[^a-z0-9]+/gi, '-').toLowerCase();
+  return `zju-${label}-${hash.toString(16).padStart(8, '0')}`;
+}
+for (const [key, value] of entries) {
+  if (key !== 'ruleset') continue;
+  const at = value.indexOf(',');
+  if (at < 0) throw new Error('ruleset 缺少逗号');
+  const policy = policyAlias(value.slice(0, at).trim());
+  const source = value.slice(at + 1).trim();
+  if (!policyNames.has(policy) || policy === 'ℹ️ 订阅信息') throw new Error(`规则策略不可用：${policy}`);
+  if (source.startsWith('[]')) {
+    const inline = source.slice(2);
+    if (inline === 'FINAL') rules.push(`MATCH,${policy}`);
+    else if (/^GEOIP,[^,]+$/.test(inline)) rules.push(`${inline},${policy}`);
+    else if (/^IP-CIDR,[^,]+\/\d+,no-resolve$/.test(inline)) rules.push(`IP-CIDR,${inline.split(',')[1]},${policy},no-resolve`);
+    else throw new Error(`暂不支持内联规则：${inline}`);
+  } else {
+    if (!source.startsWith(ownRoot) || !source.endsWith('.list') || source.includes('/../')) throw new Error('仅支持本仓库的 .list 规则源');
+    const name = stableID(source);
+    if (providers[name] && providers[name].url !== source) throw new Error('规则缓存标识冲突');
+    providers[name] = {type:'http', behavior:'classical', format:'text', url:source, path:`./rule-providers/${name}.list`, interval:86400};
+    rules.push(`RULE-SET,${name},${policy}`);
+  }
+}
+if (!rules.length || !rules.at(-1).startsWith('MATCH,')) throw new Error('INI 需要以 []FINAL 兜底规则结尾');
+for (const proxy of [...proxies, ...infoProxies]) for (const key of Object.keys(proxy)) if (key.startsWith('_')) delete proxy[key];
+if (target !== 'Surge') {
+  $content = ProxyUtils.yaml.dump({'mixed-port':7890, 'allow-lan':false, mode:'rule', 'log-level':'info',
+    profile:{'store-selected':true}, proxies:[...proxies,...infoProxies], 'proxy-groups':outputGroups, 'rule-providers':providers, rules});
+} else {
+  const proxyLines = ProxyUtils.produce(proxies.map(p => ({...p})), 'Surge', 'internal');
+  if (!Array.isArray(proxyLines) || proxyLines.length !== proxies.length) throw new Error('有 Hysteria2 节点无法转换为 Surge');
+  const converted = new Set(proxyLines.map(line => line.slice(0,line.indexOf('=')).trim()));
+  if (proxies.some(p => !converted.has(p.name))) throw new Error('Surge 转换后的节点名称不一致');
+  const groupLines = outputGroups.map(g => `${g.name} = ${g.type}, ${g.proxies.join(', ')}`+
+    (g.type === 'select' ? '' : `, interval=${g.interval}`+(g.type === 'url-test' ? `, tolerance=${g.tolerance}` : '')));
+  const ruleLines = rules.map(rule => rule.startsWith('RULE-SET,')
+    ? `RULE-SET,${providers[rule.split(',')[1]].url},${rule.split(',')[2]}` : rule.replace(/^MATCH,/, 'FINAL,'));
+  $content = ['# ZJU Rule — Surge (Hysteria2)', '[General]', 'loglevel = notify',
+    'proxy-test-url = http://www.gstatic.com/generate_204', 'test-timeout = 5', '', '[Proxy]',
+    ...proxyLines, ...infoProxies.map(p => `${p.name} = direct`), '', '[Proxy Group]', ...groupLines,
+    '', '[Rule]', ...ruleLines, ''].join('\n');
+}

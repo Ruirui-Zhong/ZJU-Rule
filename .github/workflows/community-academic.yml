@@ -10,7 +10,7 @@ on:
 permissions:
   contents: write
 concurrency:
-  group: community-academic
+  group: rule-maintenance
   cancel-in-progress: false
 jobs:
   sync:
@@ -21,7 +21,10 @@ jobs:
         with:
           python-version: '3.x'
       - run: python scripts/sync_community_academic.py
-      - run: python -m unittest discover -s tests -v
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node scripts/validate.mjs
       - name: Commit refreshed domain data
         run: |
           git add Clash/CommunityAcademic.list Clash/Providers/CommunityAcademic.yaml
@@ -29,4 +32,5 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git commit -m 'Refresh community academic domain rules'
+          git pull --rebase
           git push

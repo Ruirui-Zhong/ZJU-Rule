@@ -1,176 +1,87 @@
 # Sub-Store 接入 ZJU Rule
 
-高速地区与 arXiv 专用分流详见 [Regions-Arxiv.md](Regions-Arxiv.md)：地区只含高速来源，arXiv 默认香港，个人首选与公共规则分离。
+`ZJU.ini` 决定规则顺序、分组类型、成员和默认项。共享生成器位于 `src/substore-core.js`，Clash/Mihomo 与 Surge 的独立脚本由构建命令生成，不再各自维护一套策略。
 
-## 配置
+## 推荐接入：原子配置包
 
-1. 创建组合订阅 `Plinx`，包含 `Plinx-home`（家宽）和 `Plinx-high`（高速）。如订阅名称不同，修改脚本顶部 `collectionName` 和 `sourceCategory`。
-2. 新建普通“文件”（不是“mihomo 配置”），名称 `ZJU-Plinx`，来源“远程”：
-
-   ```text
-   https://raw.githubusercontent.com/Ruirui-Zhong/ZJU-Rule/main/Clash/config/ZJU.ini
-   ```
-
-3. 添加脚本操作，粘贴同目录 `zju-sub-store.js` 的全部内容，或使用远程脚本：
+1. 创建组合订阅 `Plinx`，通常包含 `Plinx-home`、`Plinx-high`，可加入 `Plinx-Extra`。单个来源失败或没有兼容节点时，继续使用其余来源；全部来源不可用时明确报错，由客户端保留上次有效配置。
+2. 创建普通“文件”（不是 Mihomo 配置类型），远程来源填：
 
    ```text
-   https://raw.githubusercontent.com/Ruirui-Zhong/ZJU-Rule/main/Clash/config/zju-sub-store.js
+   https://raw.githubusercontent.com/Ruirui-Zhong/ZJU-Rule/main/Clash/config/substore-bundle.json
    ```
 
-4. 即时预览并保存，将完整配置下载链接导入客户端。升级旧版本时，需要同时更新 INI 和脚本，可禁用远程缓存后预览。
+3. 添加远程脚本操作。Clash/Mihomo 使用：
 
-## 策略组与展示顺序
+   ```text
+   https://raw.githubusercontent.com/Ruirui-Zhong/ZJU-Rule/main/Clash/config/zju-sub-store-loader.js
+   ```
 
-按下面顺序展示；缺少对应节点时省略地区、Extra 或家宽 IPv6 组，缺少套餐条目时省略“订阅信息”：
+   Surge 使用 `zju-sub-store-loader-surge.js`。Surge 仍仅输出可转换的 Hysteria2 节点。
+4. 预览并保存，再将完整配置的下载链接导入客户端。一次下载的配置包同时包含 INI 和生成器，因此不会把新 INI 与旧生成脚本混用。加载器的协议为 `schema: 1`。
 
-| 顺序 | 策略组 | 默认行为 |
-| --- | --- | --- |
-| 1 | 🚀 默认代理 | 默认美国自动，可选手动、地区、家宽或 Extra |
-| 2 | 🤖 AI 平台 | 家宽稳定 |
-| 3 | Claude | 独立选择实际家宽节点，默认第一个家宽节点 |
-| 4 | ✔ ZJU内网 | DIRECT，可独立切换校园节点或代理 |
-| 5 | 🔎 学术搜索 | 手动选择组，可固定具体节点 |
-| 6 | 📚 学术资源 | DIRECT |
-| 7 | 📄 arXiv | 独立选择出口 |
-| 8 | 🔐 公共验证 | 跟随学术资源，默认直连 |
-| 9 | 🌍 国外媒体 | 手动选择组 |
-| 10 | 🌏 国内媒体 | DIRECT |
-| 11 | 🌐 通用服务 | DIRECT，可统一切换代理 |
-| 12 | 🎯 全球直连 | DIRECT，可临时切换代理 |
-| 13 | 🛑 广告拦截 | REJECT，可临时放行 |
-| 14 | 🛡️ 隐私防护 | REJECT，可独立放行 |
-| 15 | 🐟 漏网之鱼 | 手动选择组，处理全部规则未命中的流量 |
-| 16 | ♻️ 美国自动 | 普通美国节点中自动选择 |
-| 17 | 🚀 手动选择 | 只列普通实际节点，不含自动或地区组 |
-| 18 | 🏠 家宽节点 | 家宽稳定，也可手动固定节点 |
-| 19 | 🏠 家宽稳定 | 优先顺序回退：可用就保持，失效再切换 |
-| 20 | 🏠 家宽 IPv6 | 仅家宽 IPv6 入口，60 秒检查、5 秒超时；无匹配节点时省略 |
-| 21 | 🇭🇰 香港节点 | 独立选择出口 |
-| 22 | 🇯🇵 日本节点 | 独立选择出口 |
-| 23 | 🇺🇸 美国节点 | 独立选择出口 |
-| 24 | 🇹🇼 台湾节点 | 独立选择出口 |
-| 25 | 🇸🇬 新加坡节点 | 独立选择出口 |
-| 26 | 🇰🇷 韩国节点 | 独立选择出口 |
-| 27 | 🇩🇪 德国节点 | 独立选择出口 |
-| 28 | 🇬🇧 英国节点 | 独立选择出口 |
-| 29 | 🌐 其他高速节点 | 独立选择出口 |
-| 30 | 🧩 Extra 节点 | 仅 Plinx-Extra 节点，独立选择 |
-| 31 | ℹ️ 订阅信息 | 仅展示，不参与路由 |
+旧的 `ZJU.ini` + `zju-sub-store.js` 接入方式继续兼容，但推荐迁移到原子包。更改源码后运行 `node scripts/build_substore.mjs`，同时更新生成的脚本与配置包。
 
-- 国外媒体合并 YouTube、Netflix、巴哈姆特和其他国外媒体；国内媒体合并哔哩哔哩、网易云音乐和其他国内媒体。
-- 通用服务合并微软/Bing/OneDrive、苹果、游戏、FCM，保留默认直连及代理切换能力。普通 Google 服务沿原通用代理规则，GoogleCN 例外归全球直连；谷歌学术独立。
-- 广告拦截合并 BanAD、BanProgramAD、BanEasyList、BanEasyListChina；BanEasyPrivacy 保留独立隐私防护。
-- 所有 49 项规则来源、匹配优先级和合并前的默认直连/代理/拦截方向保持不变。LAN、Tailscale、RVPN/WebVPN 登录入口保留硬性直连，避免递归代理；ResearchGate 保留自定义直连。
-- `FINAL` 必须交给漏网之鱼；域名未列出但命中 GEOIP 等规则时，仍按命中的规则处理。
-- AI 默认家宽，其他需要代理的组默认手动选择；校园、国内媒体、通用服务、全球直连、学术资源和拦截组不强制走高速。
-- `♻️ 美国自动`：仅对美国 US 节点测试可用性与延迟，间隔 300 秒、切换容差 100ms；其他地区不参与。`🚀 默认代理` 默认选此自动组；手动选择仅保留非 Extra 的实际节点。家宽组默认自动家宽，也可手动固定节点，不再生成高速组。AI 默认家宽，也可选择美国自动组。测试通过不代表 GPT 等特定网站一定可用，切换不迁移已有连接。
-- 普通 INI 按名称识别家宽/高速；Sub-Store 脚本严格按订阅来源分类，并按 INI 定义排序所有策略组。
+## 每台设备的参数
 
-## 直连与更新
+远程脚本 URL 的 fragment 可填写 URI 编码的 JSON 参数。保留已有 `preferredNodesByRegion`，按设备补充参数；例如 JSON `{"profile":"server","layout":"compact"}` 对应的 fragment 为 `#%7B%22profile%22%3A%22server%22%2C%22layout%22%3A%22compact%22%7D`。
 
-- 第一条内联规则 `IP-CIDR,100.101.106.44/32,DIRECT,no-resolve` 保证访问这台 Tailscale 服务器时走直连。客户端需要处于规则模式且连接 Tailscale；它不会自动启动 Tailscale。
-- ResearchGate 主站及子域名由 `ResearchDirect.list` 优先直连。其余规则顺序保留在 `ZJU.ini`。
-- `.list` 对应的 YAML Provider 可运行 `python3 update_providers.py` 同步；Mihomo 规则集每 86400 秒更新。
-- 初次导入可先临时关闭系统代理，获取新版订阅后切回规则模式；若电脑使用另一份配置，需要在那份配置顶部也加入服务器直连规则。
-- 脚本只适配本仓库的简化 INI，不执行全部 subconverter 选项。端口、DNS、TUN、控制接口和密钥通过客户端配置或 Clash for Linux 的 Mixin 管理。
-- 两端都需要能获取远程规则；直连规则决定路由，不保证网站在当前网络中可达。
-- 不要将订阅 URL、节点凭据或控制接口密钥提交到仓库。
+| 参数 | 行为 |
+| --- | --- |
+| `profile: "default"`（默认） | 使用 INI 本身声明的默认项 |
+| `profile: "server"` | AI 和 Claude 优先家宽 IPv6 自动回退 |
+| `profile: "home"` | AI 和 Claude 优先家宽 IPv4 自动回退 |
+| `profile: "campus"` | 学术资源默认直连，机构认证跟随校园组，验证跟随学术资源 |
+| `layout: "compact"`（默认） | 微软、苹果、游戏等映射到通用服务；视频映射到国外媒体 |
+| `layout: "full"` | 独立展示微软、OneDrive、苹果、游戏、YouTube、Netflix、巴哈姆特等控制组 |
+| `defaultSelections` | 组名称到成员名称的映射，覆盖该设备默认项；已消失的个人节点选择会被忽略 |
+| `preferredNodesByRegion` | 地区代码到首选节点名称数组的映射，示例见 `node-preferences.example.json` |
+| `collectionName`、`sourceCategory` | 适配自己的组合订阅和来源名称 |
 
-## Surge 客户端
+不同设备应使用独立的文件或各自参数，不要把所有客户端共用的文件强行设为服务器预设。订阅可以记住客户端自己的选择；需要更改已记住的选项时，在客户端重新选择相应分组。
 
-Mihomo YAML 不能作为完整 Surge 配置导入。单独新建文件 `ZJU-Plinx-Surge`，远程来源仍用同一个 `ZJU.ini`，脚本改用 `zju-sub-store-surge.js`。服务器继续使用原 `ZJU-Plinx`，不要覆盖它。
+## 自动选择与故障转移
 
-- 预览应包含 `[General]`、`[Proxy]`、`[Proxy Group]`、`[Rule]`，复制这个文件的配置下载链接给 Surge。
-- 当前订阅中只输出 Surge 支持的 Hysteria2 节点，VLESS 节点不输出；要求 Surge Mac 5.4+ 或 iOS 5.8+。特殊混淆参数可能要求更高版本，以客户端官方文档为准。
-- 手动选择、AI 独立节点、服务器和 ResearchGate 直连规则保持一致。订阅信息以 `direct` 别名显示，不作为代理节点参与分流。
-- 这是完整配置，可从 URL 导入 Surge；也可通过 `policy-path` 读取其中的 `[Proxy]` 节点，但这种方式不会导入分组和规则。只需要纯节点列表时，可在订阅管理中将组合订阅导出为 Surge 节点格式。
-- 当前输出为标准 Surge 配置，未声明 `MANAGED-CONFIG`，不承诺自动更新整份配置。需要时重新从 URL 导入；远程规则更新由客户端管理。
+- 默认代理优先 `🔯 故障转移`，包含各地区高速来源的实际节点；还可选 `♻️ 自动选择` 和地区组。美国暂时不可用时，仍有其他地区的线路可用。
+- 香港、日本、美国、台湾、新加坡、韩国、德国、英国等地区组均使用 `url-test`，支持个人首选排序，来源分类与地区元数据采用同一套逻辑。
+- `🏠 家宽稳定`、`🏠 家宽 IPv4`、`🏠 家宽 IPv6` 使用 `fallback`。IPv4/IPv6 专组每 60 秒检查、5 秒超时，按优先级使用可用入口。
+- 家宽 IPv6 依据名称中的独立 `v6`/`IPv6` 标记或 IPv6 字面服务器地址筛选，生成时不请求 DNS。IPv4 组收纳其余家宽入口。入口标签不保证网站看到的出口 IP 地址族。
+- 高速自动/地区组排除家宽、Extra 和通知；家宽组只收纳家宽来源。没有匹配节点的可选组及引用会被省略。
+- Claude 默认自动家宽，不再默认固定第一条实际节点；仍保留独立选择。
 
-协议与配置格式依据：[Surge 支持协议](https://manual.nssurge.com/policies/overview.html)、[Hysteria2](https://manual.nssurge.com/policies/hysteria2.html)、[远程配置](https://manual.nssurge.com/profile/managed-profile.html)。
-
-## 学术与公共验证
-
-- `ZJU.list` 只保留校园服务，`AcademicPublishers.list` 保存原列表中的出版商；与 `ZJU-More-Scholar.list`、`Scholar.list` 一起交给 `📚 学术资源`，默认 DIRECT，可切换家宽、手动选择、Extra 或校园专用节点。
-- `SharedVerification.list` 在 AI、媒体与广告规则之前匹配，`🔐 公共验证` 默认跟随 `📚 学术资源`，使默认直连的 OUP 与 Cloudflare 验证使用相同出口策略。不是关闭验证，也不能保证通过网站风控。
-- 域名分流无法按来源网站让共享验证码自动跟随不同出口。若 AI 网页验证失败，将公共验证切换到与 AI 相同的具体出口；不要在验证过程中切换节点。
-- 从 AI 和媒体列表移除对 auth0.com、stripe.com、sentry.io 等通用服务的整域接管，它们交回后续规则。
-- 本地仓库修改不会自动更新 GitHub。发布后须更新 INI、脚本及规则集；新配置引用新增列表前，先保证远程列表可访问。
-- 已导入 Surge 的本地配置可使用内联规则先应用本次修改，无需等待远程发布；再次导入旧订阅会覆盖本地修订。
-
-## 学术域名覆盖与回归检查
-
-- `ScholarProxy.list` 显式覆盖谷歌学术常用地区入口、专用资源和 Google 登录/reCAPTCHA 依赖，优先于 `GoogleCN` 与 `ProxyGFWlist`。`🔎 学术搜索` 默认手动选择，可选家宽或具体节点；不单独生成高速组；需要自动切换时，可在学术搜索等应用组里选择“自动选择”。
-- Google 登录、`www.google.com`、`www.gstatic.com`、`ssl.gstatic.com` 和 `recaptcha.net` 是共享主机，分流也会作用于其他使用它们的网页，不能按来源页面自动决定出口。没有接管整个 Google 或公共 CDN 域名。
-- `AcademicSupplement.list` 补充预印本、索引、ORCID 与开放数据平台；出版商列表补充 Springer Nature/CDN、Optica、De Gruyter Brill、Liebert。默认沿用学术资源直连，不保证当前网络可达或拥有机构全文权限。
-- PubMed/PMC、Semantic Scholar API、Elsevier 登录、ScienceDirect 静态资源原已被后缀规则覆盖，不重复添加；ResearchGate 继续沿用自定义直连。
-- 运行 `python3 -m unittest discover -s tests -v` 检查域名实际按顺序首先匹配的策略、策略默认引用、Provider 同步，以及非学术 Google/公共 CDN 未被扩大接管。检查范围是明确列出的域名样本，不等于覆盖所有学术网站或浏览器端到端验证。
-- 本机 Surge 使用内联规则即时应用；仓库中的远程新列表仍需发布后才能由其他客户端订阅。
-
-参考：[Google Scholar 帮助](https://scholar.google.com/intl/en/scholar/help.html)、[Semantic Scholar API](https://api.semanticscholar.org/api-docs/)、[Optica](https://opg.optica.org/)、[De Gruyter Brill](https://www.degruyterbrill.com/publishing/about-us)。
-
-## 合并版本更新
-
-- INI 和两个转换脚本必须一起更新。Sub-Store 如果使用“快捷脚本”，需要替换保存的脚本文本；只更新 GitHub 不会更新已粘贴的脚本。
-- 已导入客户端的旧配置不会自动删去旧策略组，须重新下载整份配置后替换/导入。更新后检查策略组以上是基础分组，另有 arXiv 组及按节点生成的高速地区组，缺少节点的地区不输出。
-
-- `tests/fixtures/routing_defaults.json` 固化合并前全部规则来源、顺序及默认方向，确保合并不会将原代理规则改为直连或丢失校园出口切换。
-
-美国自动组展示在 AI 平台前。Clash/Mihomo 使用 url-test（lazy=false）；Surge 使用 url-test 和全局 proxy-test-url。Clash 保留 VLESS；Surge 按兼容性输出，保留套餐信息。客户端可能记住上次选择；需在“手动选择”中选“自动选择”才能自动切换。AI 要使用美国自动组时也需单独选择；固定实际节点不会自动替换。
-
-`Plinx-Extra` 独立展示，不参与手动/自动选择；Plinx-high 纳入手动选择，不生成高速组。AI 默认家宽，其他需要代理的应用默认手动选择；原有 DIRECT/REJECT 默认不变。
-
-最终出口：普通实际节点放入“手动选择”（Plinx-high、Plinx-home）；Plinx-Extra 独立展示；AI 默认家宽，其他默认需要代理的应用跟随手动选择。原 DIRECT/REJECT 默认保留。
-
-## 最新节点分组
-
-- Clash/Mihomo 保留 VLESS 实际节点；Surge 继续只输出当前适配的 Hysteria2，不强行转换不支持的协议。
-- `Plinx-Extra` 按来源归入独立的 `🧩 Extra 节点`，不进入手动选择、美国自动选择或自动家宽。应用组提供 Extra 作为可选出口；不默认启用。Surge 如没有受支持的 Extra 节点则省略这个组及其引用。
-- 手动选择仅列出 Plinx-high 和 Plinx-home 的实际节点，另提供美国自动选项。美国自动组排除 Extra，仅测试名称匹配美国的普通节点。
-- 家宽组默认选择 `🏠 家宽稳定`，也保留手动节点；AI 继续默认家宽，因此会跟随家宽自动选择。自动家宽只含 Plinx-home 的节点。
-- 两个自动组间隔 300 秒、容差 100ms。所有普通默认代理应用仍跟随手动选择，DIRECT/REJECT 方向保持不变。
-- 基础 18 组另加 arXiv 组和最多 9 个可用地区组；没有订阅信息、兼容 Extra 或某地区节点时分别省略对应组。这里的来源分类由 Sub-Store 脚本实现，普通 subconverter INI 的名称正则不能可靠区分订阅来源。
-
-## 简化出口
-
-普通需要代理的业务统一跟随“🚀 默认代理”（默认美国自动）；“🚀 手动选择”只列真实普通节点，不含自动/地区组。AI 默认“🏠 家宽稳定”，按优先顺序使用第一个可用家宽节点，失效再切换；家宽手动入口继续保留。arXiv 香港首选、Extra 独立及其他直连/拦截意图不变。规则顺序保持原样，无新增构建或发布工具。
-
-## Claude 独立出口
-
-- `Claude.list` 从通用 AI 列表拆出 Claude/Anthropic 域名，优先交给 `Claude` 策略组。
-- `Claude` 组仅列出家宽来源的实际节点，默认直接选择具体线路；也可显式选择 `🏠 家宽 IPv6` 自动回退组。未选择共享自动组时，其选择独立于其他 AI 平台。默认订阅中的第一个家宽节点，客户端可记住后续手动选择。
-- Clash 与 Surge 同时支持此组；Surge 仅显示兼容的 Hysteria2 家宽节点。
-- 本机 AdsPower 的专用入口可保持 `127.0.0.1:17891`，将其 listener 的 `proxy` 改为 `Claude`。端口仍由本机客户端管理，公共订阅不强制开放端口。
-
-## 学术规则统一维护
-
-学术域名、投稿系统例外与社区规则源统一保存在本仓库，不需要 Sub-Store 后置“学术分流增强”脚本，也不增加 OpenReview 或学术下载回退策略组。
-
-- `ProxyPriority.list`：Manuscript Central、Preprints.org 主站及子域名优先交给默认代理。
-- `ResearchDirect.list`：ResearchGate、Editorial Manager 保持直连。
-- `AcademicSupplement.list`：OpenReview、ACL Anthology、CVF、PMLR、JMLR、Overleaf、Zotero 等交给现有学术资源策略。arXiv 的独立规则仍优先。
-- `CommunityAcademic.list`：从 [MetaCubeX 学术域名库](https://github.com/MetaCubeX/meta-rules-dat/blob/meta/geo/geosite/category-scholar-%21cn.list) 转换为标准 classical 规则；裸域名保留精确匹配，`+.` 保留后缀匹配。GitHub Actions 每天同步，有变化才提交；上游失败或异常数据不会覆盖现有文件。客户端每 86400 秒更新仓库规则。自动任务可能延迟，需在 Actions 中检查实际运行结果。
-- `scripts/sync_community_academic.py` 同步社区规则及其 YAML Provider；不要手动编辑生成内容。
-
-从旧配置迁移：先确认新版 `ZJU.ini` 和规则文件已发布，将 Sub-Store 文件来源更新为仓库新版 INI；保留原转换脚本及个人节点偏好，移除后置增强操作，预览通过后保存。更新客户端完整订阅，而不只是更新规则缓存。若使用固定提交链接，需要切换到包含此次规则的提交。
-
-个人首选节点、端口、系统代理、DNS 与 TUN 等机器相关设置继续留在客户端或个人参数中，不写入公共规则仓库。
-
-
-## 家宽 IPv6 自动故障转移
-
-`🏠 家宽 IPv6` 只收纳 `Plinx-home` 来源的实际节点，并要求名称含独立的 `v6`/`IPv6` 标记（不区分大小写），或 `server` 是 IPv6 字面地址。生成过程不查询 DNS；标签描述入口，不保证出口 IP 的地址族。高速、Extra、套餐通知及只在域名中出现 `v6` 的节点不会据此加入。
-
-Clash/Mihomo 使用 `fallback`、`interval: 60`、`timeout: 5000`、`lazy: false`；Surge 使用 `fallback, interval=60` 和现有的全局 `test-timeout = 5`，且仍只收纳其支持的 Hysteria2 节点。无匹配节点时省略分组及所有引用，避免生成空组或悄悄改用其他出口。
-
-默认代理、AI 平台、Claude 与家宽节点组均可选择此组，原有默认选择保留。服务器需要使用 IPv6 家宽时，在更新合并订阅后执行：
+服务器切换示例：
 
 ```bash
 clashsub use PlinX-Merge
 clashnode use "🤖 AI 平台" "🏠 家宽 IPv6"
-# Claude 独立分流，需要时单独选择：
 clashnode use "Claude" "🏠 家宽 IPv6"
 ```
 
-家庭 Mac 仍可使用现有的 IPv4 家宽入口。该组只在家宽 IPv6 线路之间按优先级回退；健康检查通过不等于特定 AI 服务一定可用，已断开的连接不会迁移，且所有入口或共同出口故障时仍可能不可用。
+健康检查检测一般连通性，不证明特定 AI 服务已经解锁。故障切换不能迁移已经中断的连接；共同出口或整个网络故障时，组内节点仍可能同时不可用。
 
-离线检查：`node tests/test_residential_ipv6.mjs`，并运行现有的订阅生成、地区分流和 Python 回归检查。测试使用模拟节点，不发起线路连通性测试。
+## 学术、机构认证和公共验证
+
+- `📚 机构认证` 处理 ACM、JSTOR、Web of Science 等依赖学校订阅的资源，默认跟随 `✔ ZJU内网`。校园组的切换会同步影响这些资源。
+- `📚 学术资源` 处理普通学术站点和社区学术域名，默认跟随默认代理；校园预设可改为直连。
+- `📄 arXiv` 优先香港自动组；香港组不存在时，从 INI 中其余可用选项继续选择，不生成无意义的空组。
+- `🔎 学术搜索` 独立处理谷歌学术及明确的共享依赖，不整体接管全部 Google/CDN 域名。
+- `🔐 公共验证` 默认跟随 AI，避免 AI 主站与验证走不同出口。用于论文网站时可改为学术资源或机构认证。纯域名规则不能知道验证请求来自哪个网页，因此不承诺跨所有业务自动匹配来源出口。
+- 直连不等于获得机构权限；校外仍需要学校认可的远程认证方式。
+
+## 上游同步与缓存
+
+`config/upstream_rules.json` 明确列出同步的基础规则和本地保留项。自动任务从 SubConv/ZJU-Rule 的同一个提交取回整个批次，检查格式与数量后更新规则及 YAML 镜像；任一下载或验证失败都不发布该批次。`config/upstream-lock.json` 记录实际来源提交。
+
+AI 规则由上游 AI 列表加 `AIPlatformExtras.list` 生成，明确的 AI 服务优先于微软、Google 等通用规则；Claude 和共享认证/CDN 域名分开处理。校园、机构认证、研究例外等本地策略不被通用同步覆盖。社区学术域名另由既有工作流同步，两种维护任务串行运行。
+
+规则缓存名由来源 URL 稳定生成，不使用 INI 顺序编号。插入或重排规则不会复用另一来源的旧缓存；更新内容仍由客户端按 86400 秒间隔获取。旧的 `zju-rule-N.list` 不再被新配置引用，无需删除正在使用的缓存。
+
+## 维护与离线检查
+
+```bash
+node scripts/build_substore.mjs
+node scripts/validate.mjs
+python3 scripts/sync_upstream_rules.py --source-dir /path/to/SubConv-ZJU-Rule
+```
+
+验证覆盖 AI/学术首次匹配、来源隔离、缓存名稳定性、旧 INI 兼容、单来源失效、设备预设、两种布局和两种输出格式。不发起节点连通性测试。提交 INI/脚本变化时必须同时构建配置包；CI 会拒绝过期的生成文件。
