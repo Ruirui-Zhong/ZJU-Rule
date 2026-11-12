@@ -8,8 +8,10 @@ for(const target of ['ClashMeta','Surge']){
   const legacy=fs.readFileSync(root+'/tests/fixtures/legacy.ZJU.ini','utf8');
   assert((await generate(target,nodes,{},legacy)).g.has('🤖 AI 平台'),'new generator accepts old INI');
   const server=await generate(target,nodes,{profile:'server'});
-  assert.equal(server.g.get('🤖 AI 平台').proxies[0],'🏠 家宽 IPv6');
-  assert.equal(server.g.get('Claude').proxies[0],'🏠 家宽 IPv6');
+  assert.equal(server.g.get('🤖 AI 平台').proxies[0],'🏠 家宽稳定');
+  assert.equal(server.g.get('Claude').proxies[0],'🏠 家宽稳定');
+  assert.deepEqual(server.g.get('🏠 家宽稳定').proxies,['家宽-v6','家宽普通']);
+  if(target==='ClashMeta')assert.equal(server.g.get('🏠 家宽稳定').interval,60);
   const home=await generate(target,nodes,{profile:'home'});
   assert.equal(home.g.get('🤖 AI 平台').proxies[0],'🏠 家宽 IPv4');
   const campus=await generate(target,nodes,{profile:'campus'});

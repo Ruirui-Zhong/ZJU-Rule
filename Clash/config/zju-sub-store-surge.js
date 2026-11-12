@@ -3,6 +3,7 @@ const $target = 'Surge';
 // Shared generator. Edit ZJU.ini for policies; regenerate standalone scripts/bundle with scripts/build_substore.mjs.
 const target = $target;
 const scriptArguments = typeof $arguments === 'object' && $arguments ? $arguments : {};
+const profile = scriptArguments.profile ?? 'default';
 const collectionName = scriptArguments.collectionName ?? 'Plinx';
 const sourceCategory = { 'Plinx-home': 'residential', 'Plinx-high': 'high', 'Plinx-Extra': 'extra', ...(scriptArguments.sourceCategory ?? {}) };
 const ownRoot = 'https://raw.githubusercontent.com/Ruirui-Zhong/ZJU-Rule/main/';
@@ -114,14 +115,32 @@ const isIPv6Entry = proxy => {
 const normal = proxies.filter(p => category(p) !== 'extra');
 const high = proxies.filter(p => category(p) === 'high');
 const residential = proxies.filter(p => category(p) === 'residential');
+// Opt in per device: TCP house entrances can use independent high-speed nodes.
+// Preserve their original names and credentials, and therefore their residential exits.
+const relayNames = scriptArguments.residentialIPv4Relay ?? [];
+if (!Array.isArray(relayNames) || relayNames.some(name => typeof name !== 'string'))
+  throw new Error('residentialIPv4Relay 必须是高速中转节点名称数组');
+const relayMembers = [...new Set(relayNames)].filter(name => high.some(p => p.name === name && !p['dialer-proxy']));
+const relayTargets = target === 'Surge' ? [] : residential.filter(p =>
+  !isIPv6Entry(p) && p.type === 'vless' && !p['dialer-proxy']);
+const relayName = '🔗 家宽中转';
+const relayEnabled = relayMembers.length > 0 && relayTargets.length > 0;
+if (relayEnabled) {
+  if (occupied.has(relayName)) throw new Error('家宽中转组名称与已有节点或分组冲突');
+  for (const proxy of relayTargets) proxy['dialer-proxy'] = relayName;
+}
 const residentialGroups = new Set(['🏠 家宽节点', '🏠 家宽稳定', '🏠 家宽 IPv4', '🏠 家宽 IPv6', 'Claude']);
 const optionalNames = new Set(['ℹ️ 订阅信息', '🧩 Extra 节点', '♻️ 美国自动', '♻️ 自动选择', '🔯 故障转移',
   '🏠 家宽节点', '🏠 家宽稳定', '🏠 家宽 IPv4', '🏠 家宽 IPv6', ...regionGroupNames]);
 function candidates(name) {
   if (name === 'ℹ️ 订阅信息') return infoProxies;
   if (name === '🧩 Extra 节点') return proxies.filter(p => category(p) === 'extra');
-  if (residentialGroups.has(name)) return residential.filter(p =>
-    name === '🏠 家宽 IPv6' ? isIPv6Entry(p) : name === '🏠 家宽 IPv4' ? !isIPv6Entry(p) : true);
+  if (residentialGroups.has(name)) {
+    const pool = residential.filter(p =>
+      name === '🏠 家宽 IPv6' ? isIPv6Entry(p) : name === '🏠 家宽 IPv4' ? !isIPv6Entry(p) : true);
+    return profile === 'server' && name === '🏠 家宽稳定'
+      ? [...pool.filter(isIPv6Entry), ...pool.filter(p => !isIPv6Entry(p))] : pool;
+  }
   if (name === '♻️ 美国自动') return high.filter(p => identifyRegion(p) === 'US');
   const region = regionDefinitions.find(region => region.name === name);
   if (region) return high.filter(p => identifyRegion(p) === region.code);
@@ -130,6 +149,8 @@ function candidates(name) {
   return normal;
 }
 const groups = [];
+if (relayEnabled) groups.push({name:relayName, type:'fallback', proxies:relayMembers,
+  url:'http://www.gstatic.com/generate_204', interval:60, timeout:5000, lazy:false});
 for (const definition of definitions) {
   if (aliases.has(definition.name)) continue;
   const members = [];
@@ -152,6 +173,7 @@ for (const definition of definitions) {
   if (definition.name === 'ℹ️ 订阅信息' && !infoProxies.length) continue;
   const group = {name: definition.name, type: definition.type, proxies: [...new Set(members)]};
   if (group.type !== 'select') Object.assign(group, {url: definition.url, interval: definition.interval, timeout: 5000, lazy: false});
+  if (profile === 'server' && group.name === '🏠 家宽稳定') group.interval = 60;
   if (group.type === 'url-test') group.tolerance = definition.tolerance;
   groups.push(group);
 }
@@ -178,7 +200,6 @@ for (const group of outputGroups) {
   group.proxies = group.proxies.filter(m => !removed.has(m));
   if (!group.proxies.length) group.proxies = ['REJECT'];
 }
-const profile = scriptArguments.profile ?? 'default';
 const profileEntries = entries.filter(([key]) => key === 'profile_default').map(([, value]) => value.split('`'));
 if (!['default', ...profileEntries.map(parts => parts[0])].includes(profile)) throw new Error('未知设备预设：'+profile);
 for (const [preset, name, ...choices] of profileEntries) {

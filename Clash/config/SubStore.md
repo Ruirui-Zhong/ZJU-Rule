@@ -29,13 +29,14 @@
 | 参数 | 行为 |
 | --- | --- |
 | `profile: "default"`（默认） | 使用 INI 本身声明的默认项 |
-| `profile: "server"` | AI 和 Claude 优先家宽 IPv6 自动回退 |
+| `profile: "server"` | AI 和 Claude 使用家宽稳定组，IPv6 入口排在 IPv4 前，每 60 秒检查并自动回退 |
 | `profile: "home"` | AI 和 Claude 优先家宽 IPv4 自动回退 |
 | `profile: "campus"` | 学术资源默认直连，机构认证跟随校园组，验证跟随学术资源 |
 | `layout: "compact"`（默认） | 微软、苹果、游戏等映射到通用服务；视频映射到国外媒体 |
 | `layout: "full"` | 独立展示微软、OneDrive、苹果、游戏、YouTube、Netflix、巴哈姆特等控制组 |
 | `defaultSelections` | 组名称到成员名称的映射，覆盖该设备默认项；已消失的个人节点选择会被忽略 |
 | `preferredNodesByRegion` | 地区代码到首选节点名称数组的映射，示例见 `node-preferences.example.json` |
+| `residentialIPv4Relay` | 可选的高速节点名称数组；Clash/Mihomo 为家宽 IPv4 VLESS 入口启用链式中转，按数组顺序自动回退 |
 | `collectionName`、`sourceCategory` | 适配自己的组合订阅和来源名称 |
 
 不同设备应使用独立的文件或各自参数，不要把所有客户端共用的文件强行设为服务器预设。订阅可以记住客户端自己的选择；需要更改已记住的选项时，在客户端重新选择相应分组。
@@ -49,12 +50,26 @@
 - 高速自动/地区组排除家宽、Extra 和通知；家宽组只收纳家宽来源。没有匹配节点的可选组及引用会被省略。
 - Claude 默认自动家宽，不再默认固定第一条实际节点；仍保留独立选择。
 
+服务器到家宽 IPv4 入口超时、但其他高速入口正常时，可在服务器文件的参数中增加：
+
+```json
+{"profile":"server","residentialIPv4Relay":["HK[02]-三网优化","HK[02]-三网优化-xhttp","US[14]-三网优化-v6"]}
+```
+
+此时路径为服务器 → 高速中转 → 家宽 IPv4 入口 → 目标网站；网站看到的仍是家宽出口。
+生成器新增 `🔗 家宽中转` 自动回退组，并仅给 IPv4 家宽 VLESS 节点设置 Mihomo 的 `dialer-proxy`。
+保留家宽 IPv6 直连，避免把整个家宽组与高速组互相引用；Hy2 等 UDP 家宽协议保持原配置。
+默认不启用中转。Mac 家用网络同样连不上家宽 IPv4 时，也可在 `profile: "home"` 的文件启用此参数，使用前两个 IPv4 高速中转入口即可，不依赖家庭 IPv6。Surge 文件保持原配置。
+节点名称应与订阅一致；某个来源缺失时不生成无效引用。名称相同服务器上的两个中转协议仍可能同时故障。
+中转会增加时延，并同时消耗高速和家宽两端流量；它绕过原入口路径故障，不代表原路径已经恢复。
+用法参考 [Mihomo 链式代理文档](https://wiki.metacubex.one/config/proxies/dialer-proxy/)。
+
 服务器切换示例：
 
 ```bash
 clashsub use PlinX-Merge
-clashnode use "🤖 AI 平台" "🏠 家宽 IPv6"
-clashnode use "Claude" "🏠 家宽 IPv6"
+clashnode use "🤖 AI 平台" "🏠 家宽稳定"
+clashnode use "Claude" "🏠 家宽稳定"
 ```
 
 健康检查检测一般连通性，不证明特定 AI 服务已经解锁。故障切换不能迁移已经中断的连接；共同出口或整个网络故障时，组内节点仍可能同时不可用。
